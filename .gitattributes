@@ -1,0 +1,4 @@
+# Portable entry points; do not renormalize existing sources.
+scripts/dev/*.sh text eol=lf
+scripts/dev/*.ps1 text eol=lf
+.codex/**/*.toml text eol=lf

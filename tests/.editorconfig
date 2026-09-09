@@ -1,0 +1,3 @@
+[*.cs]
+# Frozen test names intentionally use Given_When_Then-style underscores.
+dotnet_diagnostic.CA1707.severity = none
