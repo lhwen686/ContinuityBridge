@@ -1,0 +1,158 @@
+{
+  "title": "ContinuityBridge Cloud Clipboard v1 P0 Baseline",
+  "status": "p0_documented_contracts_not_business_implemented",
+  "observed_remote_baseline": "720e0d9112c330b6d809c14648141981797e038d",
+  "hash_scope": "UTF-8 text normalized CRLF to LF, matching canonical Git blobs; excludes MANIFEST.json itself",
+  "files": [
+    {
+      "path": "00_START_HERE.md",
+      "bytes": 4544,
+      "sha256": "7ed72754d0d11a84b24e70824573ee155d3b362b29ed6e4591fbebd1d0056115"
+    },
+    {
+      "path": "01_ARCHITECTURE.md",
+      "bytes": 10981,
+      "sha256": "7e11e12d57677d8c935b8479032eb34e758399c8be12c6c8a4a25fd6a84b5b3f"
+    },
+    {
+      "path": "02_PROTOCOL.md",
+      "bytes": 8640,
+      "sha256": "8c9080f9e2ecf2ec2ce3539af804eeb7016cb6cd8cb21634939967ca62c2453c"
+    },
+    {
+      "path": "03_DEVICE_RUNBOOK.md",
+      "bytes": 7391,
+      "sha256": "30fbf9ed05006f609a91d775d315bbd30a1e8c4aed711622914cf5fb0d7dfbe3"
+    },
+    {
+      "path": "04_IPHONE_SHORTCUTS.md",
+      "bytes": 6079,
+      "sha256": "07ed7d1e0cf4d1c489ac6388ff813e95d296ddd68cf0f4b133a85c609697c8b4"
+    },
+    {
+      "path": "05_TEST_AND_AUTOMATION.md",
+      "bytes": 7824,
+      "sha256": "79bdce4abc77d140a2f6d31458115486293eee2af410d6a4282cf505931b7930"
+    },
+    {
+      "path": "06_DEPLOYMENT.md",
+      "bytes": 4500,
+      "sha256": "722bb31695bdf3852382152ca17900651471d229cd2e0988f592eadc03f1b215"
+    },
+    {
+      "path": "07_OFFICIAL_SOURCES.md",
+      "bytes": 5628,
+      "sha256": "8540deadb3176fdfae07806493fc36156fd848fe7b3882c3d433de8b47a8155b"
+    },
+    {
+      "path": "08_CODE_MIGRATION.md",
+      "bytes": 6638,
+      "sha256": "1989a743905d41c442ee6c4fb2e869d238723d46b142896bd44147eccda478eb"
+    },
+    {
+      "path": "09_ADR_V1_BASELINE.md",
+      "bytes": 7367,
+      "sha256": "c817594839fd9c758932a932e9c1867dfeafe70cc3ec27dc671241290356eab1"
+    },
+    {
+      "path": "10_P0_BASELINE.md",
+      "bytes": 8166,
+      "sha256": "474b49c14f5405483a8b239a90a27af01eb050ac5c0ff64c28c8544629cf9867"
+    },
+    {
+      "path": "11_ACCEPTANCE_AND_HANDOFF.md",
+      "bytes": 9395,
+      "sha256": "8bb3219d22dbe8ffd9d59b19fd6731c22ad3df8eb5c3e56cf888d4ff53fb41ed"
+    },
+    {
+      "path": "ALL_CODEX_PROMPTS.md",
+      "bytes": 28643,
+      "sha256": "0dd4ff98fa09257806c0797d3eb7529cb21585f6de323ff015ff6afae6982871"
+    },
+    {
+      "path": "contracts/default-capabilities.json",
+      "bytes": 632,
+      "sha256": "f8bce4ba43dc39c573e794323c00733d8150581e17285f9b302eed5b53e8d9a2"
+    },
+    {
+      "path": "contracts/openapi.json",
+      "bytes": 20184,
+      "sha256": "09228a7836185df6ae1d1684f8e8350a4d562d9abb7624a4a5859e7ca56851c9"
+    },
+    {
+      "path": "contracts/README.md",
+      "bytes": 3228,
+      "sha256": "8744bb6bf7bc5d45937b023ef510db8a375b4ddcc9eb5ccce03e0a9ad7662db1"
+    },
+    {
+      "path": "contracts/schema-cases.json",
+      "bytes": 20017,
+      "sha256": "aeed6294968c707aacd6fd31a6cac81060d05dc75689803f38a3f92e114ef09b"
+    },
+    {
+      "path": "contracts/schemas.json",
+      "bytes": 12599,
+      "sha256": "d117f939ff024f1e74da8c9aea80f8afc79a250675eda5a53d07cc3b573d64a1"
+    },
+    {
+      "path": "contracts/validate.ps1",
+      "bytes": 5021,
+      "sha256": "3dfe6a4be2e7117fcaafacb496678036ed0acba1f578135efc51f0b4a2400908"
+    },
+    {
+      "path": "prompts/COMMON.md",
+      "bytes": 4706,
+      "sha256": "5fc01e5eab9e0fcd918bdc296a7c442c5206c865edc62af47346f8bf274915af"
+    },
+    {
+      "path": "prompts/P0_WINDOWS_BASELINE.md",
+      "bytes": 2570,
+      "sha256": "7c62d480158567b48cb869762303aa6e9e85a4f3135e77bbdfae7965b2f6db2e"
+    },
+    {
+      "path": "prompts/P1_MAC_LAB_PREFLIGHT.md",
+      "bytes": 2281,
+      "sha256": "09b76decbfbeff9ae1af9215db48cbbf84f2ba3100ffbfbf26e7632d878f489b"
+    },
+    {
+      "path": "prompts/P2_WINDOWS_RELAY.md",
+      "bytes": 2462,
+      "sha256": "b6193d054ce0bea902cfb359472f74183d2265075f3db57a0c950b5188ef3326"
+    },
+    {
+      "path": "prompts/P3_VPS_STAGING.md",
+      "bytes": 2404,
+      "sha256": "2bae5f3582d2ae35f96d0d926d43fb0e27b70c1f86a43e42b15f6d0ca397ac65"
+    },
+    {
+      "path": "prompts/P4_MAC_SHORTCUT_SPIKE.md",
+      "bytes": 2719,
+      "sha256": "96a32b71243d030feaff64796875317a89cd9b98d319bdde300c2cc7e820ccbf"
+    },
+    {
+      "path": "prompts/P5_WINDOWS_CLIENT.md",
+      "bytes": 2778,
+      "sha256": "dbec9d15a4db284a09f964f338944e2b9144c0a77bd21c49b8f9f547bd6476ad"
+    },
+    {
+      "path": "prompts/P6M_MAC_E2E.md",
+      "bytes": 2565,
+      "sha256": "84dd996a0e9176bc15c22823fdabadcc3a8c099e56dfb103b3a4b71b4a17b34e"
+    },
+    {
+      "path": "prompts/P6W_WINDOWS_TEST_AGENT.md",
+      "bytes": 1608,
+      "sha256": "d4adc6acfa2784cdba19d0831a31a6ae6f78602beb4914c53d1cd6f723c4865b"
+    },
+    {
+      "path": "prompts/P7_VPS_PRODUCTION.md",
+      "bytes": 1765,
+      "sha256": "04f1f8977f9d156d6192688d139e4306138fe6ddf484c3fe3af9b8fe18428a9f"
+    },
+    {
+      "path": "prompts/P8_WINDOWS_RELEASE.md",
+      "bytes": 2167,
+      "sha256": "64862782fa32e801181021f8ae9653c5769f8bbde53af2dfcf2b6e49a0403806"
+    }
+  ]
+}

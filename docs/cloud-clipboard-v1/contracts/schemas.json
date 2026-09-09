@@ -1,0 +1,524 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContinuityBridge v1 wire payloads (P0, unimplemented)",
+  "$defs": {
+    "RequestId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![\\s\\S])",
+      "not": {
+        "const": "00000000-0000-0000-0000-000000000000"
+      }
+    },
+    "ETag": {
+      "type": "string",
+      "pattern": "^\"[A-Za-z0-9_-]{1,128}\"(?![\\s\\S])",
+      "description": "One quoted strong state ETag. No wildcard, list or weak tag."
+    },
+    "Revision": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)(?![\\s\\S])"
+    },
+    "ItemId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,128}(?![\\s\\S])"
+    },
+    "CryptoMode": {
+      "type": "string",
+      "const": "none"
+    },
+    "TextUpload": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "pattern": "^[^\\u0000]*(?![\\s\\S])",
+          "description": "Empty text allowed. Strict UTF-8, no lone surrogate; decoded byte and JSON wire limits enforced at runtime."
+        },
+        "cryptoMode": {
+          "$ref": "#/$defs/CryptoMode"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "TextItem": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/ItemId"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "sourceDeviceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}(?![\\s\\S])"
+        },
+        "cryptoMode": {
+          "$ref": "#/$defs/CryptoMode"
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?Z(?![\\s\\S])"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?Z(?![\\s\\S])"
+        },
+        "kind": {
+          "const": "text"
+        },
+        "mimeType": {
+          "const": "text/plain; charset=utf-8"
+        }
+      },
+      "required": [
+        "itemId",
+        "byteLength",
+        "sha256",
+        "sourceDeviceId",
+        "cryptoMode",
+        "committedAt",
+        "expiresAt",
+        "kind",
+        "mimeType"
+      ],
+      "additionalProperties": false
+    },
+    "ImageItem": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "$ref": "#/$defs/ItemId"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "sourceDeviceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}(?![\\s\\S])"
+        },
+        "cryptoMode": {
+          "$ref": "#/$defs/CryptoMode"
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?Z(?![\\s\\S])"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?Z(?![\\s\\S])"
+        },
+        "kind": {
+          "const": "image"
+        },
+        "mimeType": {
+          "enum": [
+            "image/png",
+            "image/jpeg"
+          ]
+        }
+      },
+      "required": [
+        "itemId",
+        "byteLength",
+        "sha256",
+        "sourceDeviceId",
+        "cryptoMode",
+        "committedAt",
+        "expiresAt",
+        "kind",
+        "mimeType"
+      ],
+      "additionalProperties": false
+    },
+    "Item": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TextItem"
+        },
+        {
+          "$ref": "#/$defs/ImageItem"
+        }
+      ]
+    },
+    "State": {
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "const": 1
+        },
+        "serverEpoch": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![\\s\\S])",
+          "not": {
+            "const": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "etag": {
+          "$ref": "#/$defs/ETag"
+        },
+        "item": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Item"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "serverEpoch",
+        "revision",
+        "etag",
+        "item"
+      ],
+      "additionalProperties": false
+    },
+    "MutationReceipt": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "$ref": "#/$defs/RequestId"
+        },
+        "operation": {
+          "enum": [
+            "put",
+            "clear"
+          ]
+        },
+        "result": {
+          "$ref": "#/$defs/State"
+        },
+        "state": {
+          "$ref": "#/$defs/State"
+        },
+        "replayed": {
+          "type": "boolean"
+        },
+        "available": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "requestId",
+        "operation",
+        "result",
+        "state",
+        "replayed",
+        "available"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "clear"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "available": {
+                "const": false
+              },
+              "result": {
+                "properties": {
+                  "item": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "put"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "item": {
+                    "$ref": "#/$defs/Item"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Capabilities": {
+      "type": "object",
+      "properties": {
+        "protocolVersions": {
+          "type": "array",
+          "items": {
+            "const": 1
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "text",
+              "image"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "imageMimeTypes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "image/png",
+              "image/jpeg"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "maxTextUtf8Bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maxTextJsonBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maxImageBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maxDecodedPixels": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "maxTextUtf8Bytes",
+            "maxTextJsonBytes",
+            "maxImageBytes",
+            "maxDecodedPixels"
+          ],
+          "additionalProperties": false
+        },
+        "retentionSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "idempotency": {
+          "type": "object",
+          "properties": {
+            "retentionSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maxEntries": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "scope": {
+              "const": "device"
+            },
+            "storesBodies": {
+              "const": false
+            }
+          },
+          "required": [
+            "retentionSeconds",
+            "maxEntries",
+            "scope",
+            "storesBodies"
+          ],
+          "additionalProperties": false
+        },
+        "cryptoModes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CryptoMode"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "notifications": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "websocket-v1",
+              "poll"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "maxEventBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "storage": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "memory"
+            },
+            "survivesRestart": {
+              "const": false
+            }
+          },
+          "required": [
+            "mode",
+            "survivesRestart"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "protocolVersions",
+        "kinds",
+        "imageMimeTypes",
+        "limits",
+        "retentionSeconds",
+        "idempotency",
+        "cryptoModes",
+        "notifications",
+        "maxEventBytes",
+        "storage"
+      ],
+      "additionalProperties": false
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "invalid_request",
+                "unauthorized",
+                "forbidden",
+                "idempotency_conflict",
+                "item_unavailable",
+                "state_conflict",
+                "payload_too_large",
+                "unsupported_media_type",
+                "unsupported_crypto_mode",
+                "precondition_required",
+                "rate_limited",
+                "request_timeout",
+                "internal_error",
+                "service_unavailable"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "requestId": {
+              "$ref": "#/$defs/RequestId"
+            }
+          },
+          "required": [
+            "code",
+            "message",
+            "requestId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "Event": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "changed"
+        },
+        "serverEpoch": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![\\s\\S])",
+          "not": {
+            "const": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        }
+      },
+      "required": [
+        "type",
+        "serverEpoch",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "Health": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "ok"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

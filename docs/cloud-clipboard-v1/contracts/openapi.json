@@ -1,0 +1,747 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ContinuityBridge Cloud Clipboard v1",
+    "version": "1.0.0-p0",
+    "description": "Design contract only. One deployment/device-group, one latest slot. Runtime acceptance is NOT RUN in P0. See ../02_PROTOCOL.md and ../09_ADR_V1_BASELINE.md. All REST responses no-store. Authentication precedes body reading; no compressed request Content-Encoding. Dynamic capabilities define byte limits. OAS 3.1 raw binary media types intentionally have no JSON string/base64 schema."
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "servers": [
+    {
+      "url": "https://clipboard.example.invalid",
+      "description": "Reserved placeholder; never a real deployment."
+    }
+  ],
+  "security": [
+    {
+      "deviceBearer": []
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "health",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Minimal liveness. Deployment may restrict access.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas.json#/$defs/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/v1/capabilities": {
+      "get": {
+        "operationId": "capabilities",
+        "responses": {
+          "200": {
+            "description": "Effective limits; read with authentication.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas.json#/$defs/Capabilities"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      }
+    },
+    "/v1/clipboard": {
+      "get": {
+        "operationId": "getClipboard",
+        "responses": {
+          "200": {
+            "description": "Current state including an empty item; HTTP ETag equals JSON etag.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "$ref": "./schemas.json#/$defs/ETag"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas.json#/$defs/State"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "clearClipboard",
+        "description": "No body. Accepted clear always advances revision, even when empty. Does not clear devices.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commit receipt; result is original metadata, state is current at response snapshot. Replays do not renew TTL.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas.json#/$defs/MutationReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "428": {
+            "$ref": "#/components/responses/428"
+          }
+        }
+      }
+    },
+    "/v1/items/text": {
+      "post": {
+        "operationId": "putText",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./schemas.json#/$defs/TextUpload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Commit receipt; result is original metadata, state is current at response snapshot. Replays do not renew TTL.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas.json#/$defs/MutationReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "413": {
+            "$ref": "#/components/responses/413"
+          },
+          "415": {
+            "$ref": "#/components/responses/415"
+          },
+          "428": {
+            "$ref": "#/components/responses/428"
+          }
+        }
+      }
+    },
+    "/v1/items/image": {
+      "post": {
+        "operationId": "putImage",
+        "description": "Raw PNG/JPEG bytes, not JSON/base64/multipart. Count streamed bytes even without Content-Length; validate actual static image before commit.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/CryptoMode"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "image/png": {},
+            "image/jpeg": {}
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Commit receipt; result is original metadata, state is current at response snapshot. Replays do not renew TTL.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas.json#/$defs/MutationReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "413": {
+            "$ref": "#/components/responses/413"
+          },
+          "415": {
+            "$ref": "#/components/responses/415"
+          },
+          "428": {
+            "$ref": "#/components/responses/428"
+          }
+        }
+      }
+    },
+    "/v1/items/{itemId}/content": {
+      "get": {
+        "operationId": "getContent",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ItemId"
+          }
+        ],
+        "description": "Only current nonexpired item. Unknown/replaced/expired IDs -> 410. No history, redirect or partial response. Valid Range is ignored. Clients verify metadata length/hash and recheck state plus local generation before applying.",
+        "responses": {
+          "200": {
+            "description": "Full raw bytes; Content-Type matches metadata. No JSON envelope.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "text/plain; charset=utf-8": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "image/png": {},
+              "image/jpeg": {}
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          },
+          "410": {
+            "$ref": "#/components/responses/410"
+          }
+        }
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "operationId": "events",
+        "description": "WSS upgrade with Authorization header, never token in URL. Without Upgrade -> 400. Authenticated initial/current changed hint and subsequent hints use Event schema, <=4096 UTF-8 bytes. RFC6455 ping/pong (no JSON heartbeat); no durable history. REST resynchronizes loss/order/reconnect. Revocation closes active connection with 1008; restart/shutdown may close 1001, overload 1013. Connection limits/idle timeouts are bounded deployment settings.",
+        "responses": {
+          "101": {
+            "description": "WebSocket protocol upgrade. JSON messages follow Event schema.",
+            "headers": {
+              "Upgrade": {
+                "schema": {
+                  "const": "websocket"
+                }
+              },
+              "Connection": {
+                "schema": {
+                  "const": "Upgrade"
+                }
+              },
+              "Sec-WebSocket-Accept": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "x-message-schema": {
+          "$ref": "./schemas.json#/$defs/Event"
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "deviceBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Opaque per-device token; authenticated identity supplies sourceDeviceId."
+      }
+    },
+    "parameters": {
+      "IfMatch": {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "$ref": "./schemas.json#/$defs/ETag"
+        },
+        "description": "Exact /v1/clipboard state ETag. Missing -> 428; malformed/list/wildcard/weak -> 400; stale -> 412 after idempotency lookup."
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "$ref": "./schemas.json#/$defs/RequestId"
+        },
+        "description": "Nonzero UUID scoped to authenticated device. Missing/malformed -> 400. Retry identical original request."
+      },
+      "CryptoMode": {
+        "name": "X-CB-Crypto-Mode",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "const": "none",
+          "default": "none"
+        },
+        "description": "Unknown mode -> 415. No v1 encrypted envelope."
+      },
+      "ItemId": {
+        "name": "itemId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "./schemas.json#/$defs/ItemId"
+        }
+      }
+    },
+    "responses": {
+      "400": {
+        "description": "invalid_request",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "unauthorized",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          },
+          "WWW-Authenticate": {
+            "schema": {
+              "type": "string",
+              "const": "Bearer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "forbidden",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "408": {
+        "description": "request_timeout",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "409": {
+        "description": "idempotency_conflict",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "410": {
+        "description": "item_unavailable",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "412": {
+        "description": "state_conflict",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "413": {
+        "description": "payload_too_large",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "415": {
+        "description": "unsupported_media_type or unsupported_crypto_mode",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "428": {
+        "description": "precondition_required",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "429": {
+        "description": "rate_limited",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          },
+          "Retry-After": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "description": "Required whole delta-seconds; bounded retry hint."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "internal_error",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "503": {
+        "description": "service_unavailable",
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "const": "no-store"
+            }
+          },
+          "Retry-After": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "description": "Required whole delta-seconds; bounded retry hint."
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/$defs/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

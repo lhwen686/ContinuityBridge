@@ -1,6 +1,14 @@
 # ContinuityBridge 多主机开发
 
-## 本次准备与实际边界
+## 当前事实与分阶段授权（2026-09-10 P0）
+
+Windows 本地重新核查：现有 `main` 和私有 `origin` 已存在，基线 HEAD 为 `720e0d9112c330b6d809c14648141981797e038d`，远端 main 同 SHA。开始时仅 `docs/cloud-clipboard-v1/` 未跟踪，既有跟踪文件无改动。P0 在短期 `feature/cloud-clipboard-v1` 上完成经审阅的文档与契约提交；最终 SHA 以交接记录及 Git 实际结果为准。下文“没有提交/remote”的描述只适用于 2026-09-09 原始环境准备，不能当作现状。
+
+八个现有工程仍为 `net10.0-windows`；旧 Api 只有类型标记，App 只有 UI 初始化。P0 不增加空工程、不构建或运行这些业务工程、不访问当前剪贴板、不安装工具、不连接 Mac/VPS。既有 `setup`、`status` 已在 Windows 重新执行成功，SDK 10.0.400 满足 `global.json`，这不是设备或产品验收。
+
+新的任务入口为 [云端剪贴板 v1](cloud-clipboard-v1/00_START_HERE.md)，[ADR](cloud-clipboard-v1/09_ADR_V1_BASELINE.md) 明确产品范围与旧方案替代关系；[阶段所有权与交接](cloud-clipboard-v1/11_ACCEPTANCE_AND_HANDOFF.md) 明确后续授权。P1 是独立 Mac 实验室核验；P2 才实现可移植 Relay；P3/P7 分别停在 staging/production 具体计划审批；P4 图片真机探路先于 P5 完整 Windows 开发。不得自动跨阶段执行。
+
+## 历史记录：2026-09-09 环境准备与实际边界
 
 2026-09-09 preflight 时，项目目录没有 `.git`，上级和子目录也未发现 Git 元数据；因此没有可比较的 HEAD、分支、remote 或已提交基线。本次仅初始化本地 Git，初始分支为 `main`，尚无提交、remote 或 GitHub 连接。GitHub 上是否另有同名项目未核实，不能据此认定远端不存在。
 
@@ -61,7 +69,7 @@ pwsh -NoProfile -File ./scripts/dev/windows.ps1 -Action test-core
 4. 每份结果记录：日期、SHA、工作树是否干净、主机角色、平台/工具版本、用例、预期/实际、PASS/FAIL/BLOCKED/NOT RUN、脱敏证据位置。只分享必要的脱敏摘要；原始截图、UI tree、日志和剪贴板内容留在各主机忽略的 `artifacts/`。
 5. 保留原 Phase/Gate 约束；本次环境检查不更新 G2 或后续阶段结论。恢复真实剪贴板验证前，先检查本地原始计划和证据；其他主机使用前需另行整理脱敏共享版。
 
-## 提交保护与 preflight 发现
+## 历史记录：2026-09-09 提交保护与 preflight 发现
 
 - 已枚举当前目录（含隐藏项、工具和产物），未出现访问错误。未发现 `.env`、命名为私钥/凭证的项目文件；`.tools/dotnet` 下两份 PEM 位于 SDK trustedroots，属于工具文件，整目录不提交。
 - 对排除工具、bin/obj 和原始 artifacts 后的 55 个源代码/配置/文档文件进行常见 token、私钥标记和秘密赋值模式检查，未命中。该结果是启发式扫描，不是专用扫描器认证；未审计 SDK/二进制和原始证据内容，也没有 Git 历史可扫描。
@@ -70,6 +78,8 @@ pwsh -NoProfile -File ./scripts/dev/windows.ps1 -Action test-core
 - `AGENTS.md` 已移除过时的固定浏览器插件路由和本机绝对路径，保留浏览器保护、真机证据与阶段门禁。旧版配置备份及 55 文件 SHA-256 基线保存在忽略的 `.local/development-hosts-preflight/`。
 - 忽略规则不保护已经跟踪的文件，也无法阻止 `git add -f`；首次发布前必须检查 staged diff。当前没有暂存、提交或 push，所有候选文件仍为 untracked。
 
-## 本次验证记录
+## 历史记录：2026-09-09 验证
 
 详细执行结果见 [环境准备验证](development-hosts-validation.md)。Mac mini、Linux VPS、iPhone E2E、Mobile MCP/WDA、业务测试及部署必须单列 NOT RUN，不能因脚本语法检查通过而改成 PASS。
+
+2026-09-10 的当前核查与 P0 验证另见 [P0 基线报告](cloud-clipboard-v1/10_P0_BASELINE.md)，不改写以上历史测试结果。

@@ -1,0 +1,789 @@
+[
+  {
+    "id": "text-unicode-whitespace",
+    "schema": "TextUpload",
+    "valid": true,
+    "value": {
+      "text": "  合成文本\nemoji 😀\r\n "
+    }
+  },
+  {
+    "id": "text-empty",
+    "schema": "TextUpload",
+    "valid": true,
+    "value": {
+      "text": ""
+    }
+  },
+  {
+    "id": "text-none",
+    "schema": "TextUpload",
+    "valid": true,
+    "value": {
+      "text": "fixture",
+      "cryptoMode": "none"
+    }
+  },
+  {
+    "id": "text-reject-nul",
+    "schema": "TextUpload",
+    "valid": false,
+    "value": {
+      "text": "a\u0000b"
+    }
+  },
+  {
+    "id": "text-reject-missing",
+    "schema": "TextUpload",
+    "valid": false,
+    "value": {}
+  },
+  {
+    "id": "text-reject-nonstring",
+    "schema": "TextUpload",
+    "valid": false,
+    "value": {
+      "text": 123
+    }
+  },
+  {
+    "id": "text-reject-crypto",
+    "schema": "TextUpload",
+    "valid": false,
+    "value": {
+      "text": "x",
+      "cryptoMode": "aes-gcm"
+    }
+  },
+  {
+    "id": "text-reject-device-spoof",
+    "schema": "TextUpload",
+    "valid": false,
+    "value": {
+      "text": "x",
+      "sourceDeviceId": "spoof"
+    }
+  },
+  {
+    "id": "text-reject-future-envelope",
+    "schema": "TextUpload",
+    "valid": false,
+    "value": {
+      "text": "x",
+      "keyId": "fixture"
+    }
+  },
+  {
+    "id": "state-empty",
+    "schema": "State",
+    "valid": true,
+    "value": {
+      "protocolVersion": 1,
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": "0",
+      "etag": "\"fixture-state-0\"",
+      "item": null
+    }
+  },
+  {
+    "id": "state-large-revision",
+    "schema": "State",
+    "valid": true,
+    "value": {
+      "protocolVersion": 1,
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": "9007199254740993",
+      "etag": "\"fixture-state-1\"",
+      "item": {
+        "itemId": "fixture-item-A",
+        "kind": "text",
+        "mimeType": "text/plain; charset=utf-8",
+        "byteLength": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourceDeviceId": "fixture-device",
+        "cryptoMode": "none",
+        "committedAt": "2026-09-10T00:00:00Z",
+        "expiresAt": "2026-09-10T00:30:00Z"
+      }
+    }
+  },
+  {
+    "id": "image-metadata-20mb",
+    "schema": "Item",
+    "valid": true,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "image",
+      "mimeType": "image/png",
+      "byteLength": 20000000,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T00:30:00Z"
+    }
+  },
+  {
+    "id": "jpeg-metadata",
+    "schema": "Item",
+    "valid": true,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "image",
+      "mimeType": "image/jpeg",
+      "byteLength": 20000000,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T00:30:00Z"
+    }
+  },
+  {
+    "id": "state-reject-numeric-revision",
+    "schema": "State",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": 9007199254740993,
+      "etag": "\"fixture-state-1\"",
+      "item": {
+        "itemId": "fixture-item-A",
+        "kind": "text",
+        "mimeType": "text/plain; charset=utf-8",
+        "byteLength": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourceDeviceId": "fixture-device",
+        "cryptoMode": "none",
+        "committedAt": "2026-09-10T00:00:00Z",
+        "expiresAt": "2026-09-10T00:30:00Z"
+      }
+    }
+  },
+  {
+    "id": "state-reject-leading-zero",
+    "schema": "State",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": "01",
+      "etag": "\"fixture-state-1\"",
+      "item": {
+        "itemId": "fixture-item-A",
+        "kind": "text",
+        "mimeType": "text/plain; charset=utf-8",
+        "byteLength": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourceDeviceId": "fixture-device",
+        "cryptoMode": "none",
+        "committedAt": "2026-09-10T00:00:00Z",
+        "expiresAt": "2026-09-10T00:30:00Z"
+      }
+    }
+  },
+  {
+    "id": "state-reject-weak-etag",
+    "schema": "State",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": "9007199254740993",
+      "etag": "W/\"fixture\"",
+      "item": {
+        "itemId": "fixture-item-A",
+        "kind": "text",
+        "mimeType": "text/plain; charset=utf-8",
+        "byteLength": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourceDeviceId": "fixture-device",
+        "cryptoMode": "none",
+        "committedAt": "2026-09-10T00:00:00Z",
+        "expiresAt": "2026-09-10T00:30:00Z"
+      }
+    }
+  },
+  {
+    "id": "state-reject-unquoted-etag",
+    "schema": "State",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": "9007199254740993",
+      "etag": "fixture",
+      "item": {
+        "itemId": "fixture-item-A",
+        "kind": "text",
+        "mimeType": "text/plain; charset=utf-8",
+        "byteLength": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourceDeviceId": "fixture-device",
+        "cryptoMode": "none",
+        "committedAt": "2026-09-10T00:00:00Z",
+        "expiresAt": "2026-09-10T00:30:00Z"
+      }
+    }
+  },
+  {
+    "id": "state-reject-empty-epoch",
+    "schema": "State",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "serverEpoch": "00000000-0000-0000-0000-000000000000",
+      "revision": "9007199254740993",
+      "etag": "\"fixture-state-1\"",
+      "item": {
+        "itemId": "fixture-item-A",
+        "kind": "text",
+        "mimeType": "text/plain; charset=utf-8",
+        "byteLength": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sourceDeviceId": "fixture-device",
+        "cryptoMode": "none",
+        "committedAt": "2026-09-10T00:00:00Z",
+        "expiresAt": "2026-09-10T00:30:00Z"
+      }
+    }
+  },
+  {
+    "id": "item-reject-kind-mime",
+    "schema": "Item",
+    "valid": false,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "text",
+      "mimeType": "image/png",
+      "byteLength": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T00:30:00Z"
+    }
+  },
+  {
+    "id": "item-reject-negative-length",
+    "schema": "Item",
+    "valid": false,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "text",
+      "mimeType": "text/plain; charset=utf-8",
+      "byteLength": -1,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T00:30:00Z"
+    }
+  },
+  {
+    "id": "item-reject-bad-hash",
+    "schema": "Item",
+    "valid": false,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "text",
+      "mimeType": "text/plain; charset=utf-8",
+      "byteLength": 0,
+      "sha256": "ABC",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T00:30:00Z"
+    }
+  },
+  {
+    "id": "item-reject-local-time",
+    "schema": "Item",
+    "valid": false,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "text",
+      "mimeType": "text/plain; charset=utf-8",
+      "byteLength": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T08:30:00+08:00"
+    }
+  },
+  {
+    "id": "item-reject-body-leak",
+    "schema": "Item",
+    "valid": false,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "text",
+      "mimeType": "text/plain; charset=utf-8",
+      "byteLength": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T00:30:00Z",
+      "text": "fixture"
+    }
+  },
+  {
+    "id": "item-reject-file-kind",
+    "schema": "Item",
+    "valid": false,
+    "value": {
+      "itemId": "fixture-item-A",
+      "kind": "file",
+      "mimeType": "text/plain; charset=utf-8",
+      "byteLength": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceDeviceId": "fixture-device",
+      "cryptoMode": "none",
+      "committedAt": "2026-09-10T00:00:00Z",
+      "expiresAt": "2026-09-10T00:30:00Z"
+    }
+  },
+  {
+    "id": "capabilities-defaults",
+    "schema": "Capabilities",
+    "valid": true,
+    "value": {
+      "protocolVersions": [
+        1
+      ],
+      "kinds": [
+        "text",
+        "image"
+      ],
+      "imageMimeTypes": [
+        "image/png",
+        "image/jpeg"
+      ],
+      "limits": {
+        "maxTextUtf8Bytes": 1000000,
+        "maxTextJsonBytes": 8000000,
+        "maxImageBytes": 20000000,
+        "maxDecodedPixels": 64000000
+      },
+      "retentionSeconds": 1800,
+      "idempotency": {
+        "retentionSeconds": 1800,
+        "maxEntries": 512,
+        "scope": "device",
+        "storesBodies": false
+      },
+      "cryptoModes": [
+        "none"
+      ],
+      "notifications": [
+        "websocket-v1",
+        "poll"
+      ],
+      "maxEventBytes": 4096,
+      "storage": {
+        "mode": "memory",
+        "survivesRestart": false
+      }
+    }
+  },
+  {
+    "id": "capabilities-configured",
+    "schema": "Capabilities",
+    "valid": true,
+    "value": {
+      "protocolVersions": [
+        1
+      ],
+      "kinds": [
+        "text",
+        "image"
+      ],
+      "imageMimeTypes": [
+        "image/png",
+        "image/jpeg"
+      ],
+      "limits": {
+        "maxTextUtf8Bytes": 1000000,
+        "maxTextJsonBytes": 8000000,
+        "maxImageBytes": 10000000,
+        "maxDecodedPixels": 64000000
+      },
+      "retentionSeconds": 60,
+      "idempotency": {
+        "retentionSeconds": 60,
+        "maxEntries": 512,
+        "scope": "device",
+        "storesBodies": false
+      },
+      "cryptoModes": [
+        "none"
+      ],
+      "notifications": [
+        "websocket-v1",
+        "poll"
+      ],
+      "maxEventBytes": 4096,
+      "storage": {
+        "mode": "memory",
+        "survivesRestart": false
+      }
+    }
+  },
+  {
+    "id": "cap-reject-e2ee",
+    "schema": "Capabilities",
+    "valid": false,
+    "value": {
+      "protocolVersions": [
+        1
+      ],
+      "kinds": [
+        "text",
+        "image"
+      ],
+      "imageMimeTypes": [
+        "image/png",
+        "image/jpeg"
+      ],
+      "limits": {
+        "maxTextUtf8Bytes": 1000000,
+        "maxTextJsonBytes": 8000000,
+        "maxImageBytes": 20000000,
+        "maxDecodedPixels": 64000000
+      },
+      "retentionSeconds": 1800,
+      "idempotency": {
+        "retentionSeconds": 1800,
+        "maxEntries": 512,
+        "scope": "device",
+        "storesBodies": false
+      },
+      "cryptoModes": [
+        "none",
+        "e2ee"
+      ],
+      "notifications": [
+        "websocket-v1",
+        "poll"
+      ],
+      "maxEventBytes": 4096,
+      "storage": {
+        "mode": "memory",
+        "survivesRestart": false
+      }
+    }
+  },
+  {
+    "id": "cap-reject-persistence",
+    "schema": "Capabilities",
+    "valid": false,
+    "value": {
+      "protocolVersions": [
+        1
+      ],
+      "kinds": [
+        "text",
+        "image"
+      ],
+      "imageMimeTypes": [
+        "image/png",
+        "image/jpeg"
+      ],
+      "limits": {
+        "maxTextUtf8Bytes": 1000000,
+        "maxTextJsonBytes": 8000000,
+        "maxImageBytes": 20000000,
+        "maxDecodedPixels": 64000000
+      },
+      "retentionSeconds": 1800,
+      "idempotency": {
+        "retentionSeconds": 1800,
+        "maxEntries": 512,
+        "scope": "device",
+        "storesBodies": false
+      },
+      "cryptoModes": [
+        "none"
+      ],
+      "notifications": [
+        "websocket-v1",
+        "poll"
+      ],
+      "maxEventBytes": 4096,
+      "storage": {
+        "mode": "memory",
+        "survivesRestart": true
+      }
+    }
+  },
+  {
+    "id": "put-fresh",
+    "schema": "MutationReceipt",
+    "valid": true,
+    "value": {
+      "requestId": "22222222-2222-4222-8222-222222222222",
+      "operation": "put",
+      "result": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740993",
+        "etag": "\"fixture-state-1\"",
+        "item": {
+          "itemId": "fixture-item-A",
+          "kind": "text",
+          "mimeType": "text/plain; charset=utf-8",
+          "byteLength": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceDeviceId": "fixture-device",
+          "cryptoMode": "none",
+          "committedAt": "2026-09-10T00:00:00Z",
+          "expiresAt": "2026-09-10T00:30:00Z"
+        }
+      },
+      "state": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740993",
+        "etag": "\"fixture-state-1\"",
+        "item": {
+          "itemId": "fixture-item-A",
+          "kind": "text",
+          "mimeType": "text/plain; charset=utf-8",
+          "byteLength": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceDeviceId": "fixture-device",
+          "cryptoMode": "none",
+          "committedAt": "2026-09-10T00:00:00Z",
+          "expiresAt": "2026-09-10T00:30:00Z"
+        }
+      },
+      "replayed": false,
+      "available": true
+    }
+  },
+  {
+    "id": "put-replaced-replay",
+    "schema": "MutationReceipt",
+    "valid": true,
+    "value": {
+      "requestId": "22222222-2222-4222-8222-222222222222",
+      "operation": "put",
+      "result": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740993",
+        "etag": "\"fixture-state-1\"",
+        "item": {
+          "itemId": "fixture-item-A",
+          "kind": "text",
+          "mimeType": "text/plain; charset=utf-8",
+          "byteLength": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceDeviceId": "fixture-device",
+          "cryptoMode": "none",
+          "committedAt": "2026-09-10T00:00:00Z",
+          "expiresAt": "2026-09-10T00:30:00Z"
+        }
+      },
+      "state": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740994",
+        "etag": "\"fixture-state-2\"",
+        "item": null
+      },
+      "replayed": true,
+      "available": false
+    }
+  },
+  {
+    "id": "clear-replay",
+    "schema": "MutationReceipt",
+    "valid": true,
+    "value": {
+      "requestId": "22222222-2222-4222-8222-222222222222",
+      "operation": "clear",
+      "result": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740994",
+        "etag": "\"fixture-state-2\"",
+        "item": null
+      },
+      "state": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740994",
+        "etag": "\"fixture-state-2\"",
+        "item": null
+      },
+      "replayed": true,
+      "available": false
+    }
+  },
+  {
+    "id": "clear-reject-available",
+    "schema": "MutationReceipt",
+    "valid": false,
+    "value": {
+      "requestId": "22222222-2222-4222-8222-222222222222",
+      "operation": "clear",
+      "result": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740994",
+        "etag": "\"fixture-state-2\"",
+        "item": null
+      },
+      "state": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740994",
+        "etag": "\"fixture-state-2\"",
+        "item": null
+      },
+      "replayed": true,
+      "available": true
+    }
+  },
+  {
+    "id": "put-reject-empty-result",
+    "schema": "MutationReceipt",
+    "valid": false,
+    "value": {
+      "requestId": "22222222-2222-4222-8222-222222222222",
+      "operation": "put",
+      "result": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "0",
+        "etag": "\"fixture-state-0\"",
+        "item": null
+      },
+      "state": {
+        "protocolVersion": 1,
+        "serverEpoch": "11111111-1111-4111-8111-111111111111",
+        "revision": "9007199254740993",
+        "etag": "\"fixture-state-1\"",
+        "item": {
+          "itemId": "fixture-item-A",
+          "kind": "text",
+          "mimeType": "text/plain; charset=utf-8",
+          "byteLength": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sourceDeviceId": "fixture-device",
+          "cryptoMode": "none",
+          "committedAt": "2026-09-10T00:00:00Z",
+          "expiresAt": "2026-09-10T00:30:00Z"
+        }
+      },
+      "replayed": false,
+      "available": true
+    }
+  },
+  {
+    "id": "error-conflict",
+    "schema": "Error",
+    "valid": true,
+    "value": {
+      "error": {
+        "code": "state_conflict",
+        "message": "Refresh current state before a new action.",
+        "requestId": "22222222-2222-4222-8222-222222222222"
+      }
+    }
+  },
+  {
+    "id": "error-reject-body",
+    "schema": "Error",
+    "valid": false,
+    "value": {
+      "error": {
+        "code": "state_conflict",
+        "message": "fixture",
+        "requestId": "22222222-2222-4222-8222-222222222222",
+        "body": "fixture"
+      }
+    }
+  },
+  {
+    "id": "event-changed",
+    "schema": "Event",
+    "valid": true,
+    "value": {
+      "type": "changed",
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": "42"
+    }
+  },
+  {
+    "id": "event-reject-body",
+    "schema": "Event",
+    "valid": false,
+    "value": {
+      "type": "changed",
+      "serverEpoch": "11111111-1111-4111-8111-111111111111",
+      "revision": "42",
+      "text": "fixture"
+    }
+  },
+  {
+    "id": "health-minimal",
+    "schema": "Health",
+    "valid": true,
+    "value": {
+      "status": "ok"
+    }
+  },
+  {
+    "id": "etag-quoted",
+    "schema": "ETag",
+    "valid": true,
+    "value": "\"fixture-state-42\""
+  },
+  {
+    "id": "etag-wildcard",
+    "schema": "ETag",
+    "valid": false,
+    "value": "*"
+  },
+  {
+    "id": "etag-list",
+    "schema": "ETag",
+    "valid": false,
+    "value": "\"one\", \"two\""
+  },
+  {
+    "id": "etag-weak",
+    "schema": "ETag",
+    "valid": false,
+    "value": "W/\"one\""
+  },
+  {
+    "id": "etag-reject-final-newline",
+    "schema": "ETag",
+    "valid": false,
+    "value": "\"fixture\"\n"
+  },
+  {
+    "id": "revision-reject-final-newline",
+    "schema": "Revision",
+    "valid": false,
+    "value": "42\n"
+  },
+  {
+    "id": "uuid-reject-final-newline",
+    "schema": "RequestId",
+    "valid": false,
+    "value": "22222222-2222-4222-8222-222222222222\n"
+  },
+  {
+    "id": "item-id-reject-final-newline",
+    "schema": "ItemId",
+    "valid": false,
+    "value": "fixture\n"
+  }
+]

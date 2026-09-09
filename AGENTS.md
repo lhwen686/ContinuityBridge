@@ -13,7 +13,7 @@
 - Keep `main` stable. Use short-lived `feature/<topic>`, `fix/<topic>` or Codex worktrees; never maintain long-lived Windows/Mac branches.
 - Before editing, inspect repository root, status, branch and remotes. Preserve all unrelated changes. No destructive checkout/reset/clean, history rewrite or force push without explicit authorization.
 - A worktree belongs to its local host. Check out the same committed SHA on test hosts; report dirty working trees separately. Initial publication must review an explicit file allowlist; do not blindly `git add .`.
-- This checkout initially had no Git metadata. Until the first reviewed commit exists, `main` is unborn and worktree/clone-based handoff is not ready. Do not invent an upstream or claim a GitHub connection.
+- Historical record: the 2026-09-09 environment preflight began without Git metadata. On 2026-09-10, P0 verified an existing committed `main` at `720e0d9112c330b6d809c14648141981797e038d` and the private `origin` repository `lhwen686/ContinuityBridge`. This is a dated observation, not a rollback target; recheck branch, HEAD, dirty state and remote visibility at each handoff.
 
 ## Host configuration and secrets
 
@@ -43,3 +43,10 @@
 
 - Search codex-mem at the start of continuing/diagnostic work and before broad architecture/dependency/deployment changes. If unavailable or empty, say so and consult repository records.
 - Save memory only when directly requested by the user and allowed by the active memory interface. Never save secrets or personal test evidence; do not claim a save that was not performed.
+
+## Cloud clipboard v1 phase authority (2026-09-10)
+
+- Read `docs/cloud-clipboard-v1/00_START_HERE.md`, `prompts/COMMON.md` and the explicitly requested phase. The accepted scope and defaults are in `09_ADR_V1_BASELINE.md`; machine-readable wire contracts are in `contracts/`. Read `11_ACCEPTANCE_AND_HANDOFF.md` for ownership and gates.
+- P0 authorizes documentation, contract/test-plan validation and reviewed commit/push to the verified private feature branch. It does not authorize business implementation, clipboard access, tool installation, device operations or deployment. Only proceed to P1-P8 when that phase is explicitly assigned.
+- The new v1 scope supersedes historical file-transfer/Range/2GB and LAN/Tailscale product requirements. It does not alter existing network configuration or turn historical G2 into PASS. Old G2 failures remain historical evidence; they do not block the separately authorized P0 design work. Reused Windows behavior requires the new phase's real validation.
+- Future portable Contracts/Relay projects may target `net10.0` when P2 is assigned; the eight existing projects remain Windows-only at this baseline. Keep setup read-only. P3 staging and P7 production require approval of their concrete deployment plans; one does not authorize the other.

@@ -1,0 +1,13 @@
+# P6-W — Windows：启动真实桌面测试端
+
+在Windows **当前登录用户的交互式桌面**执行。读COMMON与05_TEST_AND_AUTOMATION。候选SHA-B必须由P5交付且P3 staging同版本；P6-M的Mac控制端也将检出同一SHA。不运行在WSL、服务Session0或只有SSH的其他会话。
+
+本次允许在指定测试窗口使用合成fixture覆盖并验证剪贴板。我应先保管当前剪贴板；只在本机内存尽力备份/恢复支持格式，不把私人备份写磁盘/发云/发聊天。遇到非fixture内容停止该用例，不能回传原文。
+
+核查进程位于正确用户session、单实例、候选SHA/dirty、staging origin与test lease。按照P5真实存在的命令启动可见Windows TestAgent，连接受限QA入口；token从OS/本机安全输入读取，不打印。原始日志仅ignored artifacts。
+
+agent只可执行fixture白名单、核查真实Clipboard格式/完整文本/图片像素、在指定安全测试窗口粘贴、报告脱敏摘要。无任意shell/文件/URL能力，不自动把它注册为永久开机服务。
+
+成功准备后输出READY及非秘密runId/candidateSHA/租约截止/停止方式，让用户切到Mac执行P6-M。若当前Codex无法让进程在会话之外持续运行，提供并实际验证最小的可见测试runner启动入口，不声称后台已经存在。不要靠睡眠假装维持任务或承诺聊天结束后由模型后台工作。
+
+Mac完成或租约到期后runner应自动退出控制状态并释放资源。最后按本地备份能力恢复，确认产品客户端测试配置没有被误切为生产。
