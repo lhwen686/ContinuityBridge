@@ -1,0 +1,15 @@
+# Explicit build-context allowlist. No host config, screenshots, test output or credentials.
+**
+!global.json
+!Directory.Build.props
+!Directory.Packages.props
+!NuGet.Config
+!src/
+!src/ContinuityBridge.Contracts/
+!src/ContinuityBridge.Contracts/*.cs
+!src/ContinuityBridge.Contracts/*.csproj
+!src/ContinuityBridge.Contracts/packages.lock.json
+!src/ContinuityBridge.Relay/
+!src/ContinuityBridge.Relay/*.cs
+!src/ContinuityBridge.Relay/*.csproj
+!src/ContinuityBridge.Relay/packages.lock.json

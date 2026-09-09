@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ContinuityBridge.Contracts/ContinuityBridge.Contracts.csproj" />
+    <Project Path="src/ContinuityBridge.Relay/ContinuityBridge.Relay.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ContinuityBridge.Relay.Tests/ContinuityBridge.Relay.Tests.csproj" />
+  </Folder>
+</Solution>

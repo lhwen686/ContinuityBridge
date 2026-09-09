@@ -1,0 +1,7 @@
+[
+  {
+    "deviceId": "REPLACE_WITH_SERVER_GENERATED_DEVICE_ID",
+    "tokenSha256": "REPLACE_WITH_SHA256_FROM_PROVISIONING",
+    "revoked": false
+  }
+]

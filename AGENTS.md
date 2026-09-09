@@ -4,7 +4,7 @@
 
 - Read `docs/development-hosts.md` before cross-host work. Preserve `src/`, `tests/`, the solution and existing project names unless a task requires a change.
 - Windows is the primary client development host: Win32 clipboard, tray, logon startup and Windows tests. Mac mini is the iPhone USB/Shortcuts UI test lab. Linux VPS is the future Cloud Relay deployment host.
-- All current .NET projects target `net10.0-windows`; do not claim macOS/Linux runtime support. Cloud Relay is a future, separately authorized implementation, not the existing Windows API project.
+- The eight legacy .NET projects target `net10.0-windows`; do not claim macOS/Linux support for them. P2 adds portable Contracts, Relay and Relay.Tests targeting `net10.0`; use `ContinuityBridge.Portable.slnx` and `scripts/dev/test-relay.*`. The existing Windows API project is not Cloud Relay. Linux runtime verification belongs to P3.
 - Environment preparation does not authorize business changes, SDK/tool installation, Mobile MCP/WDA installation, device pairing, service startup, Docker deployment or network configuration changes.
 
 ## Git and host isolation
