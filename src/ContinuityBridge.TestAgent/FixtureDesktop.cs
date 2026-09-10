@@ -7,97 +7,178 @@ using ContinuityBridge.Windows;
 
 namespace ContinuityBridge.TestAgent;
 
-// This fixture-only desktop oracle is excluded from the product dependency graph.
-internal sealed class FixtureDesktop
+// Native work is serialized on a dedicated STA, not the visible UI thread.
+// External sequence changes stop the run without reading the new body.
+internal sealed class FixtureDesktop : IRunnerDesktop, ICloudClipboard
 {
-    private static readonly Limits Limits = new(1_000_000, 8_000_000, 20_000_001, 16_000_000);
-    private readonly Win32Clipboard native;
+    private static readonly Limits OracleLimits = new(1_000_000, 8_000_000, 20_000_001, 16_000_000);
+    private readonly WindowsClipboardAdapter host;
+    private readonly Action stop;
+    private ClipboardTakeover? takeover;
     private readonly Dictionary<string, (string Kind, int Length, byte[] Hash)> fingerprints = [];
     private readonly Dictionary<string, QaFixture> fixtures = [];
     private readonly string fixtureDirectory = Path.Combine(Path.GetTempPath(), "ContinuityBridge-QA", Guid.NewGuid().ToString("N"));
     private string? fileFixturePath;
+    private long generation;
+    private bool syncStarted;
+    private bool finishing;
+    private string? lastFixture;
 
-    internal FixtureDesktop(nint handle) => native = new(handle);
-    internal void PrepareCatalog()
+    internal FixtureDesktop(Action stop)
+    {
+        this.stop = stop;
+        host = new WindowsClipboardAdapter(_ =>
+        {
+            if (!finishing && takeover is not null && !takeover.IsUnchanged()) stop();
+        }, _ => stop(), cloudMode: true);
+    }
+
+    public long Generation => Interlocked.Read(ref generation);
+    public event Action<long>? Changed;
+    public Task PrepareAsync(CancellationToken cancellationToken) => Task.Run(() =>
     {
         foreach (string id in FixtureCatalog.Ids)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var fixture = FixtureCatalog.Get(id);
             fixtures[id] = fixture;
             fingerprints[id] = (fixture.Kind, fixture.Bytes.Length, SHA256.HashData(fixture.Bytes));
         }
-    }
+    }, cancellationToken);
 
-    internal async Task<bool> IsKnownAsync(CancellationToken cancellationToken)
+    public Task CaptureAsync(CancellationToken cancellationToken) => host.InvokeOnClipboardThreadAsync(native =>
     {
-        if (System.Windows.Forms.Clipboard.ContainsFileDropList())
-        {
-            var list = System.Windows.Forms.Clipboard.GetFileDropList();
-            return fileFixturePath is not null && list.Count == 1 && list[0] == fileFixturePath;
-        }
-        var current = await ReadAsync(cancellationToken);
-        if (current is null) return false;
-        byte[] hash = SHA256.HashData(current.Bytes);
-        return fingerprints.Values.Any(f => f.Kind == current.Kind && f.Length == current.Bytes.Length && f.Hash.AsSpan().SequenceEqual(hash)) ||
-            await Task.Run(() => MatchPixels(current, "alpha-png-v1") || MatchPixels(current, "jpeg-v1") || MatchPixels(current, "bitmap-v1"), cancellationToken);
-    }
+        takeover = new(native); takeover.Capture(cancellationToken); return true;
+    }, cancellationToken);
 
-    internal bool Set(string fixtureId, uint expectedSequence, CancellationToken cancellationToken)
+    public async Task<bool> SetAsync(string fixtureId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var fixture = fixtures[fixtureId];
+        IReadOnlyList<PreparedClipboard> formats;
         if (fixtureId == "file-drop-v1")
         {
-            Directory.CreateDirectory(fixtureDirectory); fileFixturePath = Path.Combine(fixtureDirectory, "fixture.txt");
-            File.WriteAllBytes(fileFixturePath, fixture.Bytes);
+            Directory.CreateDirectory(fixtureDirectory);
+            fileFixturePath = Path.Combine(fixtureDirectory, "fixture.txt");
+            await File.WriteAllBytesAsync(fileFixturePath, fixture.Bytes, cancellationToken);
             byte[] pathBytes = Encoding.Unicode.GetBytes(fileFixturePath + "\0\0");
             byte[] drop = new byte[20 + pathBytes.Length]; drop[0] = 20; drop[16] = 1; pathBytes.CopyTo(drop, 20);
-            return Write([new("files", drop)]);
+            formats = [new("files", drop)];
         }
-        if (fixture.Kind == "text")
+        else if (fixture.Kind == "text")
+            formats = [new("unicode", Encoding.Unicode.GetBytes(ClipboardPayload.StrictUtf8.GetString(fixture.Bytes) + '\0'))];
+        else if (fixtureId == "bitmap-v1")
+            formats = await Task.Run(() => new[] { new PreparedClipboard("dib", ImageClipboardCodec.Dib(
+                ImageClipboardCodec.Decode(fixture.Bytes, fixture.MimeType, OracleLimits.MaxDecodedPixels), false)) }, cancellationToken);
+        else formats = [new(fixture.MimeType == "image/png" ? "PNG" : "JFIF", fixture.Bytes)];
+        return await host.InvokeOnClipboardThreadAsync(native =>
         {
-            // Real native edit-control copy is also exercised in P5 desktop tests.
-            return Write([new("unicode", Encoding.Unicode.GetBytes(ClipboardPayload.StrictUtf8.GetString(fixture.Bytes) + '\0'))]);
-        }
-        if (fixtureId == "bitmap-v1")
-        {
-            var pixels = ImageClipboardCodec.Decode(fixture.Bytes, fixture.MimeType, Limits.MaxDecodedPixels);
-            return Write([new("dib", ImageClipboardCodec.Dib(pixels, false))]);
-        }
-        // Fixed encoded fixture data. Product capture must read real clipboard formats.
-        return Write([new(fixture.MimeType == "image/png" ? "PNG" : "JFIF", fixture.Bytes)]);
-        bool Write(IReadOnlyList<PreparedClipboard> formats) => native.TryWriteCloud(formats, expectedSequence, Guid.Empty, cancellationToken, fixtureSource: true);
+            bool written = Write(native, formats, cancellationToken);
+            if (written)
+            {
+                lastFixture = fixtureId;
+                long value = Interlocked.Increment(ref generation);
+                if (syncStarted) Changed?.Invoke(value);
+            }
+            return written;
+        }, cancellationToken);
     }
 
-    internal async Task<bool> VerifyAsync(string fixtureId, CancellationToken cancellationToken)
+    private bool Write(Win32Clipboard native, IReadOnlyList<PreparedClipboard> formats, CancellationToken cancellationToken, bool remote = false)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (finishing || takeover is null) return false;
+        IClipboardMemory memory = native;
+        var entries = new List<ClipboardMemoryEntry>();
+        if (remote)
+        {
+            entries.Add(new(memory.Format(Win32Clipboard.IncludeInHistoryFormatName), new byte[4]));
+            entries.Add(new(memory.Format(Win32Clipboard.UploadToCloudFormatName), new byte[4]));
+        }
+        foreach (var entry in formats)
+            entries.Add(new(entry.Format switch { "unicode" => 13, "dib" => 8, "dibv5" => 17, "files" => 15, _ => memory.Format(entry.Format) }, entry.Bytes));
+        if (takeover.Write(entries, cancellationToken)) return true;
+        stop(); return false;
+    }
+
+    public async Task<bool> VerifyAsync(string fixtureId, CancellationToken cancellationToken)
     {
         if (fixtureId == "file-drop-v1")
         {
-            if (fileFixturePath is null || !Clipboard.ContainsFileDropList()) return false;
-            var list = Clipboard.GetFileDropList();
-            return list.Count == 1 && list[0] == fileFixturePath;
+            return await host.InvokeOnClipboardThreadAsync(native =>
+            {
+                if (finishing || takeover?.IsUnchanged() != true || lastFixture != fixtureId || fileFixturePath is null) return false;
+                IClipboardMemory memory = native;
+                return memory.WithOpen(() =>
+                {
+                    if (!takeover.IsUnchanged()) return false;
+                    byte[] actual = memory.Copy(15, 4096);
+                    byte[] expectedPath = Encoding.Unicode.GetBytes(fileFixturePath + "\0\0");
+                    return actual.Length >= 20 && actual.AsSpan(20).SequenceEqual(expectedPath);
+                }, cancellationToken);
+            }, cancellationToken);
         }
-        var current = await ReadAsync(cancellationToken); if (current is null) return false;
-        var expected = fingerprints[fixtureId];
-        return current.Kind == expected.Kind && current.Bytes.Length == expected.Length &&
-            SHA256.HashData(current.Bytes).AsSpan().SequenceEqual(expected.Hash) || await Task.Run(() => MatchPixels(current, fixtureId), cancellationToken);
+        var current = await ReadAsync(cancellationToken);
+        return current is not null && await Task.Run(() => Matches(current, fixtureId), cancellationToken);
     }
 
     private async Task<ClipboardPayload?> ReadAsync(CancellationToken cancellationToken)
     {
-        // Contents stay in this process; the only output is a finite PASS/MISMATCH code.
-        var raw = native.ReadCloudRaw(NativeMethods.GetClipboardSequenceNumber(), Limits, CancellationToken.None, fixtureOracle: true);
-        return raw is null ? null : await Task.Run(() => ImageClipboardCodec.ToPayload(raw, Limits, cancellationToken), cancellationToken);
+        var raw = await host.InvokeOnClipboardThreadAsync(native =>
+        {
+            if (finishing || takeover?.IsUnchanged() != true) { stop(); return null; }
+            return native.ReadCloudRaw(takeover.ExpectedSequence, OracleLimits, cancellationToken, fixtureOracle: true);
+        }, cancellationToken);
+        return raw is null ? null : await Task.Run(() => ImageClipboardCodec.ToPayload(raw, OracleLimits, cancellationToken), cancellationToken);
     }
 
-    private static bool MatchPixels(ClipboardPayload current, string fixtureId)
+    private bool Matches(ClipboardPayload current, string fixtureId)
     {
+        var expected = fingerprints[fixtureId];
+        if (current.Kind == expected.Kind && current.Bytes.Length == expected.Length &&
+            SHA256.HashData(current.Bytes).AsSpan().SequenceEqual(expected.Hash)) return true;
         if (current.Kind != "image" || fixtureId is not ("alpha-png-v1" or "jpeg-v1" or "bitmap-v1")) return false;
-        var fixture = FixtureCatalog.Get(fixtureId);
-        var actual = ImageClipboardCodec.Decode(current.Bytes, current.MimeType, Limits.MaxDecodedPixels);
-        var expected = ImageClipboardCodec.Decode(fixture.Bytes, fixture.MimeType, Limits.MaxDecodedPixels);
+        var fixture = fixtures[fixtureId];
+        var actual = ImageClipboardCodec.Decode(current.Bytes, current.MimeType, OracleLimits.MaxDecodedPixels);
+        var pixels = ImageClipboardCodec.Decode(fixture.Bytes, fixture.MimeType, OracleLimits.MaxDecodedPixels);
         if (fixtureId == "bitmap-v1")
-            expected = ImageClipboardCodec.DecodeDib(ImageClipboardCodec.Dib(expected, false), Limits.MaxDecodedPixels, CancellationToken.None);
-        return actual.Width == expected.Width && actual.Height == expected.Height && actual.Bgra.AsSpan().SequenceEqual(expected.Bgra);
+            pixels = ImageClipboardCodec.DecodeDib(ImageClipboardCodec.Dib(pixels, false), OracleLimits.MaxDecodedPixels, CancellationToken.None);
+        return actual.Width == pixels.Width && actual.Height == pixels.Height && actual.Bgra.AsSpan().SequenceEqual(pixels.Bgra);
+    }
+
+    internal bool IsFixturePayload(ClipboardPayload payload) => fingerprints.Keys.Any(id => Matches(payload, id));
+
+    public Task StartAsync(CancellationToken cancellationToken) => host.InvokeOnClipboardThreadAsync(_ =>
+    { cancellationToken.ThrowIfCancellationRequested(); syncStarted = true; return true; }, cancellationToken);
+
+    public async Task<ClipboardPayload?> CaptureAsync(long expected, Limits limits, CancellationToken cancellationToken)
+    {
+        if (expected != Generation) return null;
+        var body = await ReadAsync(cancellationToken);
+        if (body is null || expected != Generation) return null;
+        bool known = await Task.Run(() => IsFixturePayload(body), cancellationToken);
+        if (!known) { stop(); return null; }
+        body.Validate(limits); return body;
+    }
+
+    public async Task<bool> TryApplyAsync(ClipboardPayload payload, long expected, Limits limits, CancellationToken cancellationToken)
+    {
+        if (!await Task.Run(() => IsFixturePayload(payload), cancellationToken)) { stop(); return false; }
+        var formats = await Task.Run(() => ImageClipboardCodec.Prepare(payload, limits, cancellationToken), cancellationToken);
+        return await host.InvokeOnClipboardThreadAsync(native => expected == Generation && Write(native, formats, cancellationToken, remote: true), cancellationToken);
+    }
+
+    public Task<RestoreOutcome> RestoreAsync(CancellationToken cancellationToken)
+    {
+        if (takeover is null) return Task.FromResult(RestoreOutcome.Untouched);
+        return host.InvokeOnClipboardThreadAsync(_ =>
+        { finishing = true; return takeover.Restore(cancellationToken); }, cancellationToken);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await host.DisposeAsync(); takeover?.Dispose();
+        if (fileFixturePath is not null)
+            try { File.Delete(fileFixturePath); } catch (IOException) { } catch (UnauthorizedAccessException) { }
     }
 }

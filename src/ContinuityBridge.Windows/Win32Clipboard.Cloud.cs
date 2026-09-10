@@ -13,7 +13,7 @@ internal sealed partial class Win32Clipboard
         return ExecuteWithOpenClipboard(() =>
         {
             if (NativeMethods.GetClipboardSequenceNumber() != expected) return null;
-            if (!fixtureOracle && (IsExplicitlyDenied(_includeInHistoryFormat) || IsExplicitlyDenied(_uploadToCloudFormat))) return null;
+            if (!fixtureOracle && ClipboardUploadPolicy.IsDenied(this)) return null;
             // File copies can also advertise thumbnail/image/text alternatives.
             // CF_HDROP excludes the entire copy; never upload a file preview.
             if (NativeMethods.IsClipboardFormatAvailable(15)) return null;

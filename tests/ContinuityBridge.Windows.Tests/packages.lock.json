@@ -176,6 +176,13 @@
           "ContinuityBridge.Contracts": "[1.0.0, )"
         }
       },
+      "continuitybridge.testagent": {
+        "type": "Project",
+        "dependencies": {
+          "ContinuityBridge.Qa.Protocol": "[1.0.0, )",
+          "ContinuityBridge.Windows": "[1.0.0, )"
+        }
+      },
       "continuitybridge.windows": {
         "type": "Project",
         "dependencies": {

@@ -10,5 +10,6 @@
     <ProjectReference Include="..\..\src\ContinuityBridge.Windows\ContinuityBridge.Windows.csproj" />
     <ProjectReference Include="..\..\src\ContinuityBridge.Relay\ContinuityBridge.Relay.csproj" />
     <ProjectReference Include="..\..\src\ContinuityBridge.Qa.Sidecar\ContinuityBridge.Qa.Sidecar.csproj" />
+    <ProjectReference Include="..\..\src\ContinuityBridge.TestAgent\ContinuityBridge.TestAgent.csproj" />
   </ItemGroup>
 </Project>

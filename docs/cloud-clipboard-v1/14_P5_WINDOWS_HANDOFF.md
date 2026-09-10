@@ -1,5 +1,25 @@
 # P5 Windows 候选交接
 
+## 当前：TestAgent 安全修复候选
+
+本轮从干净 `0784cbedbba68054cac2927a8b6ba1504dc7ae30` 建立 `codex/p5-testagent-safety`。候选完整 SHA 由最终交付与包内 `manifest.json/sourceSha` 给出，不在提交内自填未来 SHA。**仅本地修复；P6-W 暂停，真实 QA/VPS/P6-M/本次真实桌面剪贴板均 NOT RUN；不是 P6-W READY。** 下文原 P5 PASS 是历史记录，不转移给本次改动后的原生路径。
+
+修复：移除首次 QA 验证前写 sentinel 的行为；补全服务身份/角色/绑定 session/租约验证；建立完整格式集合的独立有界内存快照，未知/超限/竞争拒绝接管；在 OpenClipboard 内 CAS 与所有权检查；统一取消、排空、条件恢复和超时关闭；恢复正文禁止上行。本次还通过本机真实 HTTPS 查出并修复 QA POST 被 RequestDelegate 重载丢弃 JSON、只返回空200的问题，回归会实际解析响应，不能再只看状态码。
+
+TestAgent 阻止日常产品 App 与其并行运行。P6 所需自动同步改为 runner 内复用同一个 CloudSyncEngine、fixture 白名单桌面和独立的 staging 内存配置；恢复前停止并等待同步，不修改产品设置/凭据/自启。本次未增加 NuGet 包，测试项目新增 TestAgent 项目引用及对应锁图。
+
+验证入口仍是默认 `scripts/dev/test-windows-cloud.ps1`（不加 `-DesktopFixtures`）。新增 `TestAgentSafetyTests` 使用 fake Clipboard 内存、合成文本/PNG/JPEG/DIB、假时钟、延迟任务、故障注入及本机临时 HTTPS QA；覆盖授权、身份/租约、未知/混合格式、独立快照、竞争、部分发布、停止/到期/错误、排空超时、恢复上传策略与 fixture 过滤。实际计数及干净候选复核由最终 TRX 交付；编译/回归失败的开发证据留在 ignored `artifacts/p5-safety/`，不计 PASS。
+
+开发审阅回归：Core 24/24、Windows P5 28/28（其中新增安全17项）、契约49例 PASS，均零跳过；最终精确 SHA 另做干净候选复核。首次调用旧测试脚本沿用固定目录，覆盖了历史 `artifacts/p5/final/core.trx` 与 `windows-http-image.trx`；本轮已将默认输出改为每次独立目录，并提供 `-ResultsDirectory`。不把被覆盖的旧 TRX 当作仍然保留的原始证据；旧报告结论仍是历史记录。
+
+剩余限制：仅 runbook 明确支持的完整格式集合，备份最多96,000,000字节/16种格式；不备份任意 OLE/HTML/RTF/文件。CF_BITMAP 只能稳定转 DIB 时备份。原生同步 API 不可强制中断，超时跳过恢复并保持隔离，不承诺 Win32 多格式事务、强杀/断电或第三方管理器的隐私行为。真实系统格式转换、真实用户复制与窗口停止/关闭场景需要用户另行确认后执行，当前 NOT RUN。
+
+**给 P3：** 从自己的干净 checkout fetch 本修复分支并核实最终完整 SHA，准备新计划 ID，分别构建该 SHA 的 Relay 与独立 staging QA 镜像（传 CANDIDATE_SHA），记录 digest、配置/代理差异和当前运行镜像的回滚目标。Relay 业务端点没有因本修复增加变化；QA 新返回 service/role/sessionId，旧空响应不可用。只准备并审阅计划；本轮未连接或部署 VPS，不推断旧批准涵盖新版本。
+
+**给 P6-W：** P3 经授权部署同 SHA、Mac 候选一致后，先确认用户桌面测试窗口及重要内容保管，再从新包双击 TestAgent EXE；本机填 QA runner 信息，勾选本次 staging 同步并填其独立凭据，人工授权开始。按 [QA runbook](windows/QA_RUNBOOK.md) 检查身份租约、快照和隔离状态；不能仅因本修复已完成输出 READY。`-DesktopFixtures` 是旧历史组合场景，没有本次恢复安全 gate，不能用作本次真机替代验证。
+
+## 以下为原 P5 历史交接
+
 本报告属于 `feature/p5-windows-client`。完整 SHA-B 以本文件所在最终交付提交和包内 `manifest.json/sourceSha` 为准，禁止用移动分支名代替候选。P3 更新 staging 和 P6 两端必须检出同一个完整 SHA。P5 没有部署 staging/production，没有运行 iPhone↔Windows E2E。
 
 ## 集成与实现

@@ -55,7 +55,7 @@ public sealed class QaMailbox
             }
             if (ended || command is not null && result is null || history.Count >= 64) throw new QaRequestException(409);
             command = request; result = null; commandStarted = clock.GetTimestamp(); history.Add(request.CommandId, (request, null));
-            return Snapshot(command, result);
+            return Snapshot(command, result) with { Role = "controller", SessionId = controller };
         }
     }
 
@@ -66,7 +66,7 @@ public sealed class QaMailbox
             Check(request.RunId, request.CandidateSha, request.SessionId);
             if (runner is not null && runner != request.SessionId) throw new QaRequestException(409);
             runner ??= request.SessionId;
-            return Snapshot(command, result);
+            return Snapshot(command, result) with { Role = "runner", SessionId = runner };
         }
     }
 
@@ -80,7 +80,7 @@ public sealed class QaMailbox
             if (result is not null && result != request.Result) throw new QaRequestException(409);
             result = request.Result; history[command.CommandId] = (command, result);
             if (command.Action == "EndRun" || result is "MISMATCH" or "BLOCKED" or "STOPPED") ended = true;
-            return Snapshot(command, result);
+            return Snapshot(command, result) with { Role = "runner", SessionId = runner };
         }
     }
 
@@ -99,5 +99,6 @@ public sealed class QaMailbox
         if (command is not null && result is null && clock.GetElapsedTime(commandStarted) >= TimeSpan.FromSeconds(120))
         { ended = true; result = "BLOCKED"; history[command.CommandId] = (command, result); }
     }
-    private QaSnapshot Snapshot(QaCommand? value, string? outcome) => new(lease.RunId, lease.CandidateSha, lease.ExpiresAt, runner is not null, ended, value, outcome);
+    private QaSnapshot Snapshot(QaCommand? value, string? outcome) => new(lease.RunId, lease.CandidateSha, lease.ExpiresAt, runner is not null, ended, value, outcome,
+        "ContinuityBridge.Qa.Sidecar", "controller", controller);
 }

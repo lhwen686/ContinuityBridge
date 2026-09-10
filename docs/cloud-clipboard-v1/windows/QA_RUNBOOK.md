@@ -16,9 +16,26 @@ P6 前置：Windows、Mac 和 staging 均使用交付的完整 SHA-B；P3 已按
 
 1. 当前登录桌面双击 `ContinuityBridge.TestAgent.exe`。核对窗口的完整候选 SHA。
 2. 本机填写 QA HTTPS origin、runId 和 **runner token**；token 遮蔽显示、仅留内存，不截图配置。
-3. 在已公告的测试窗口勾选合成 fixture 授权并点“开始测试”。这一步会先放入固定哨兵，不读取/备份旧剪贴板。请勿在测试中复制私人内容。
-4. READY 只证明 runner 已绑定单会话并可领取动作。实际复制/粘贴和手机验证仍按 P6 场景执行。窗口可立即停止；关闭活动窗口先取消运行，再关闭。租约到期、未知内容、错误 SHA/角色/动作、超时会停止。
-5. 结束会话保留最后合成剪贴板，不上传旧个人数据，不承诺还原私有 OLE 格式。单实例互斥阻止同一桌面启动第二个 runner。
+3. **先自行保管重要剪贴板内容并确认测试窗口，手动退出日常产品 App**。TestAgent 使用产品的会话单实例互斥：产品仍开着（即使暂停）就拒绝启用；测试接管和清理期间产品也不能启动。不会代你关闭任何程序。
+4. P6 双向场景勾选“启用本次隔离的 staging 同步”，本机录入 staging Relay HTTPS origin 与 Windows 测试 device token。它复用产品同步引擎，但只能传输已提交的合成 fixture，不读取/修改日常产品设置、凭据或自启项。未勾选只能运行 QA fixture 局部检查，不能满足 P6 双向前置。凭据只在本进程内存，退出后重新输入。
+5. 在已公告窗口勾选授权并点“开始测试”。先通过真实 HTTPS `/qa/v1/poll`，严格核验 `service=ContinuityBridge.Qa.Sidecar`、`role=runner`、绑定 `sessionId`、runId、完整 SHA、活动状态及不超过45分钟的有效租约。缺字段、错误角色/候选、过期/不可达时不读写剪贴板；不能用本地配置自证租约。只有核验通过才准备 fixture、建立完整内存快照、在锁内核对序号并写 sentinel，随后才启动本次 staging 同步。
+6. 窗口显示测试控制启用、runId 和租约截止；QA `runnerReady` 仅表示认证 session 已绑定，不证明剪贴板接管/两端验收。初始窗口、构建成功或本地修复均不是 P6-W READY。实际 staging 同 SHA、租约/配置隔离和已批准桌面测试前置都成立后，P6-W 才能报告准备结果。
+7. “立即停止”、关闭、EndRun、租约到期、QA/同步网络错误、未知 fixture 和可处理异常走同一清理路径：取消并等待本次命令、准备任务及 staging 同步；仅仍是本次测试拥有的原生窗口和预期序号时恢复。任何新的外部复制（即使文字碰巧与 fixture 相同）都保留并跳过恢复；测试中不要手动复制其他内容。支持的远端 fixture 写入也由同一受保护 STA 执行。
+8. 清理完成后才释放产品互斥。恢复项先发布禁止历史/云上传 DWORD 和本地 origin，再放回支持的正文；产品捕获路径在读取正文前拒绝这类项。恢复不进入 QA、同步事件或上行队列。不自动重开产品；之后由用户按原配置手动启动，产品不会上传启动前的旧剪贴板。单实例互斥继续阻止同桌面第二个 runner。
+
+## 内存快照、竞争与恢复限制
+
+快照是独立的有界 byte 数组，不是原生句柄、惰性 IDataObject 或文件。只接受完整格式集合中的 CF_UNICODETEXT/CF_TEXT/CF_OEMTEXT/CF_LOCALE、PNG/image/png、JFIF/image/jpeg、CF_DIB/CF_DIBV5，以及已知本条隐私/origin 元数据；CF_BITMAP 通过 Windows 转成独立 DIB（转换改变序号或无法取到时拒绝）。原有编码字节保存在本机内存；不解码私人图片、不扩展到文件传输或任意 OLE。
+
+文本各格式上限2,000,002字节，编码图片各20,000,000字节，DIB各64,001,024字节，完整快照最多96,000,000字节和16种格式。元数据另有小限额；总预算仍适用。恢复前分配新 HGLOBAL，因此峰值还包含发布副本、fixture 目录数据及运行时开销。完成/失败后释放并清零托管备份；不承诺物理取证级擦除或控制 OS swap/dump。
+
+枚举到文件列表、HTML/RTF、自定义/OLE、调色板等未知格式，即使同时有文本/图片，也整项拒绝并保持原剪贴板。无法读出、竞争、序号不可用/变化、资源或快照时限超出同样不覆盖。请自行保管原内容，并准备纯文本或合成图片后重试；没有“忽略其他格式直接继续”的按钮。
+
+没有网络等待发生在 OpenClipboard 内。备份后每次写入、恢复都在锁内重新核查预期序号和已取得的所有权；检测到外部复制为粘性状态，不能因内容相同而恢复资格。真实 Windows 合成格式/延迟渲染、原生句柄错误仍需已授权的 L2 验证。
+
+快照预算3秒，单动作90秒，QA请求10秒，租约最多45分钟；清理排空预算5秒，恢复预算2秒，线程释放另限5秒。原生 GetClipboardData 等同步调用不能由 .NET 强制中断：超时取消后跳过恢复，禁用再次启用；保持产品互斥直至原任务确实退出或进程结束。窗口保持响应并可关闭，不能把超时称为已恢复。正常退出也只是尽力恢复；强杀、断电、崩溃或不可恢复原生错误没有内存恢复保证。原生多格式发布不是系统事务，部分恢复失败明确报告，不伪造 PASS。
+
+不修改系统全局剪贴板设置，不关闭浏览器/插件/密码管理器。恢复的 per-item 隐私标记由本产品执行；不声称能管制不遵守这些标记的第三方剪贴板管理器。P5 历史 `-DesktopFixtures` 场景没有使用这条安全恢复流程，不能拿来验证本次修复；本次默认回归只用 fake/合成数据及本机临时 HTTPS。
 
 ## Mac controller
 
@@ -34,6 +51,8 @@ python3 scripts/qa/controller.py EndRun
 只接受 `SetFixtureClipboard`、`VerifyClipboard`、`Status`、`EndRun`。输入没有可执行命令、URL、路径或正文；JSON 未知字段被拒绝。正文协议与 QA 状态隔离。结果只允许 PASS/MISMATCH/BLOCKED/STOPPED，不回传剪贴板正文、hash 或任意错误文本。
 
 每个 run 绑定一个 controller session 和一个 runner session；最多一条未完成动作、总计最多 64 个动作，单动作服务器截止 120 秒，runner 本地操作截止 90 秒。重复 commandId 必须是同一请求，runner 不重复执行已完成动作；确认回包丢失可重试。超限后开始新租约，不能静默扩容。HTTP 状态 401/403/409/410 分别提示认证、角色、会话/候选冲突及租约到期。
+
+当前 runner 遇到网络错误立即停止并清理，不自动重连、续租或重新接管。重新执行必须重新人工启用。QA POST 返回有 `no-store` 的真实 JSON；`service`、`role`、`sessionId` 来自服务器已认证的 mailbox 状态。此次修复后的 runner 拒绝旧 sidecar 空响应/缺身份响应，因此 P3 必须重建同 SHA 的独立 QA sidecar，不能仅替换 Windows EXE。
 
 fixture ID 与构造方式在 `src/ContinuityBridge.Qa.Protocol/FixtureCatalog.cs`。`sentinel-v1`、`unicode-v1`、`long-text-v1` 为固定文本；`alpha-png-v1` 为不对称透明图；`jpeg-v1` 为既有合成 JPEG；`png-20000000-v1`、`png-20000001-v1` 为真实扫描行和合法 ancillary chunk 的十进制边界 PNG；`bitmap-v1` 为相同图的白底 DIB；`file-drop-v1` 为仅本机新建的固定测试文件，产品必须忽略。
 

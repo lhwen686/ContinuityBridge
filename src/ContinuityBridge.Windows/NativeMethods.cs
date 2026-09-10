@@ -50,6 +50,9 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     internal static partial uint GetClipboardSequenceNumber();
 
+    [LibraryImport("user32.dll")]
+    internal static partial nint GetClipboardOwner();
+
     [LibraryImport("user32.dll", SetLastError = true)]
     internal static partial uint EnumClipboardFormats(uint format);
 

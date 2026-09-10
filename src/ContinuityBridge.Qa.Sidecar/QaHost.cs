@@ -32,9 +32,11 @@ public static class QaHost
             catch (Exception ex) when (ex is JsonException or BadHttpRequestException or InvalidDataException or OperationCanceledException)
             { context.Response.StatusCode = 400; }
         });
-        app.MapPost("/qa/v1/commands", async (HttpContext context) => Results.Json(mailbox.Submit(await Read<QaCommand>(context).ConfigureAwait(false)), QaWire.Json));
-        app.MapPost("/qa/v1/poll", async (HttpContext context) => Results.Json(mailbox.Poll(await Read<QaPoll>(context).ConfigureAwait(false)), QaWire.Json));
-        app.MapPost("/qa/v1/result", async (HttpContext context) => Results.Json(mailbox.Acknowledge(await Read<QaResult>(context).ConfigureAwait(false)), QaWire.Json));
+        // Explicit Func selects the route-handler overload. RequestDelegate would
+        // await Task<IResult> as Task and silently discard the authenticated JSON.
+        app.MapPost("/qa/v1/commands", (Func<HttpContext, Task<IResult>>)(async context => Results.Json(mailbox.Submit(await Read<QaCommand>(context).ConfigureAwait(false)), QaWire.Json)));
+        app.MapPost("/qa/v1/poll", (Func<HttpContext, Task<IResult>>)(async context => Results.Json(mailbox.Poll(await Read<QaPoll>(context).ConfigureAwait(false)), QaWire.Json)));
+        app.MapPost("/qa/v1/result", (Func<HttpContext, Task<IResult>>)(async context => Results.Json(mailbox.Acknowledge(await Read<QaResult>(context).ConfigureAwait(false)), QaWire.Json)));
         app.MapGet("/qa/v1/status", () => Results.Json(mailbox.Status(), QaWire.Json));
         return app;
     }
