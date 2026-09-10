@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import ssl
 import sys
+import tempfile
 from urllib.parse import urlsplit
 import uuid
 
@@ -21,9 +22,17 @@ FIXTURES = {
     'long-unicode': ('long-text/long-unicode.txt', 504028, '030ef73b7b4f381b32fe090e402bb0d1b7e8f93e762857097340c13893cc1b92'),
     'transparent': ('fixtures/transparent.png', 86, 'ea2069671044c7c011a5781f0fa27edef7161464e6544219d3922a4d6dcad2e4'),
     'jpeg': ('fixtures/synthetic.jpg', 632, 'ed8de651b6efa7e3f6a4c034e4f25d7539918037956fa29803aee994905073c5'),
+    'visual-transparent': ('fixtures/visual-transparent.png', 1880, 'd29004bdf6149483ed76cbe458129edf1d01df8aee3a2f0adf4a297800ee82dd'),
+    'visual-jpeg': ('fixtures/visual.jpg', 18413, 'cabf40ed4a4907ba496771dc3dd52cc00f2f338df4e5120c70a18d3147d334c7'),
     'near-limit': ('fixtures/rgba-19999999.png', 19999999, '030e0b27993e82957cc052e09a3d78b56b391cde238c2ddb167ae05e209dddba'),
     'at-limit': ('fixtures/rgba-20000000.png', 20000000, '118cee42174d9e2a0e33108ec625fdb1d20e0d2c1d0d13065d770270af06c142'),
     'over-limit': ('fixtures/rgba-20000001.png', 20000001, '8708b26a6577125e5ad3f2a156f5515b16924053b60442a8574fc023ee7b7ea5'),
+}
+
+# Pinned receipts observed during the explicit real-iPhone QA fixture lease.
+# These are synthetic fixture derivatives, never arbitrary clipboard contents.
+IPHONE_OUTPUTS = {
+    'transparent': (169, 'a3f55aab21a010c2cca23154217d671920eaebe1169f19df4197c4fae225dcd8'),
 }
 
 
@@ -64,7 +73,12 @@ class Staging:
         request_headers = dict(headers or {})
         request_headers['Authorization'] = 'Bearer ' + self.token
         try:
-            connection.request(method, path, body, request_headers)
+            try:
+                connection.request(method, path, body, request_headers)
+            except BrokenPipeError:
+                # An early size rejection may arrive before the body finishes.
+                # Only a real response below can establish the expected status.
+                pass
             response = connection.getresponse()
             data = response.read(limit + 1)
             require(len(data) <= limit, 'Response exceeds expected size bound')
@@ -95,16 +109,64 @@ def execute(mode, fixture_id):
         for name, (relative, _, _) in FIXTURES.items():
             if (directory / relative).exists():
                 fixture(name)  # Refuse to overwrite changed or unrelated fixture files.
-        generate(directory / 'fixtures')
+        # Runtime differences can encode stored blocks differently. Validate before
+        # touching the pinned files already used by the real-device run.
+        with tempfile.TemporaryDirectory(prefix='cb-p4-fixtures-') as temporary:
+            generate(temporary)
+            prepared = {}
+            for name, (relative, size, digest) in FIXTURES.items():
+                if name.startswith('visual-') or name == 'long-unicode':
+                    continue
+                contents = (Path(temporary) / Path(relative).name).read_bytes()
+                require(len(contents) == size and hashlib.sha256(contents).hexdigest() == digest,
+                        'Generator runtime differs from pinned fixture encoding; existing files preserved')
+                prepared[relative] = contents
+            (directory / 'fixtures').mkdir(parents=True, exist_ok=True)
+            for relative, contents in prepared.items():
+                (directory / relative).write_bytes(contents)
         long_dir = directory / 'long-text'
         long_dir.mkdir(parents=True, exist_ok=True)
         text = '  CB-P4-BEGIN\r\n' + ''.join(
             '第%05d行 中文🙂 e\u0301\t 引号" 反斜线\\ 保留空格  \r\n' % i
             for i in range(8000)) + 'CB-P4-END  \r\n'
-        (long_dir / 'long-unicode.txt').write_bytes(text.encode('utf-8'))
+        long_bytes = text.encode('utf-8')
+        _, long_size, long_digest = FIXTURES['long-unicode']
+        require(len(long_bytes) == long_size and hashlib.sha256(long_bytes).hexdigest() == long_digest,
+                'Long-text generator differs from pinned fixture; existing file preserved')
+        (long_dir / 'long-unicode.txt').write_bytes(long_bytes)
         for name in FIXTURES:
-            fixture(name)
-        return {'status': 'PASS', 'scope': 'Local fixture preparation only', 'fixtures': len(FIXTURES)}
+            if not name.startswith('visual-'):
+                fixture(name)
+        return {'status': 'PASS', 'scope': 'Local fixture preparation only', 'fixtures': 7}
+    if mode == 'prepare-visual':
+        from io import BytesIO
+        directory = ROOT / 'artifacts/p4-iphone-20260910'
+        (directory / 'fixtures').mkdir(parents=True, exist_ok=True)
+        for name in ('visual-transparent', 'visual-jpeg'):
+            if (directory / FIXTURES[name][0]).exists():
+                fixture(name)
+        # The bundled lab Pillow runtime is used only for visible synthetic fixtures.
+        # The core relay fixture generator above remains unchanged.
+        from PIL import Image, ImageDraw
+        visual = Image.new('RGBA', (480, 320), (0, 0, 0, 0))
+        drawing = ImageDraw.Draw(visual)
+        drawing.rectangle((20, 20, 220, 140), fill=(255, 40, 40, 255))
+        drawing.rectangle((260, 20, 460, 140), fill=(40, 80, 255, 128))
+        drawing.ellipse((20, 170, 220, 300), fill=(40, 190, 70, 255))
+        drawing.rectangle((270, 180, 450, 290), outline=(0, 0, 0, 255), width=8)
+        visual_jpeg = Image.new('RGB', visual.size, 'white')
+        visual_jpeg.paste(visual, mask=visual.getchannel('A'))
+        png_bytes, jpeg_bytes = BytesIO(), BytesIO()
+        visual.save(png_bytes, format='PNG')
+        visual_jpeg.save(jpeg_bytes, format='JPEG', quality=90, subsampling=0)
+        prepared = {'visual-transparent': png_bytes.getvalue(), 'visual-jpeg': jpeg_bytes.getvalue()}
+        for name, contents in prepared.items():
+            _, size, digest = FIXTURES[name]
+            require(len(contents) == size and hashlib.sha256(contents).hexdigest() == digest,
+                    'Visual generator differs from pinned encoding; existing files preserved')
+        for name, contents in prepared.items():
+            (directory / FIXTURES[name][0]).write_bytes(contents)
+        return {'status': 'PASS', 'scope': 'Local visual fixture preparation only', 'fixtures': 2}
     client = Staging()
     if mode == 'status':
         caps, _ = client.request('GET', '/v1/capabilities')
@@ -117,6 +179,29 @@ def execute(mode, fixture_id):
                 'itemPresent': state['item'] is not None, 'etagHeaderBodyMatch': True}
     data, mime, digest = fixture(fixture_id)
     state = client.state()
+    if mode == 'verify-iphone':
+        from io import BytesIO
+        from PIL import Image
+        require(fixture_id in IPHONE_OUTPUTS, 'No pinned iPhone receipt for fixture')
+        size, phone_digest = IPHONE_OUTPUTS[fixture_id]
+        item = state['item']
+        require(item and item.get('sha256') == phone_digest and
+                item.get('byteLength') == size and item.get('mimeType') == 'image/png',
+                'Current metadata does not match pinned iPhone fixture receipt')
+        require(isinstance(item.get('itemId'), str) and item['itemId'] and
+                all(c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-' for c in item['itemId']),
+                'Unexpected item ID syntax')
+        downloaded, _ = client.request('GET', '/v1/items/' + item['itemId'] + '/content', limit=size)
+        require(hashlib.sha256(downloaded).hexdigest() == phone_digest, 'iPhone output hash mismatch')
+        expected_image = Image.open(BytesIO(data)).convert('RGBA')
+        actual_image = Image.open(BytesIO(downloaded)).convert('RGBA')
+        require(actual_image.size == expected_image.size, 'Image dimensions changed')
+        (ROOT / 'artifacts/p4-iphone-20260910' / ('iphone-output-' + fixture_id + '.png')).write_bytes(downloaded)
+        require(actual_image.tobytes() == expected_image.tobytes(), 'RGBA pixels changed; pinned derivative saved for local inspection')
+        require(client.state()['etag'] == state['etag'], 'Item changed during pixel verification')
+        return {'status': 'PASS', 'scope': 'API readback of pinned iPhone fixture receipt',
+                'fixtureId': fixture_id, 'byteLength': size, 'sha256': phone_digest,
+                'dimensions': list(actual_image.size), 'rgbaPixelEqual': True}
     if mode == 'inject':
         body = json.dumps({'text': data.decode('utf-8')}, ensure_ascii=False).encode('utf-8') if mime == 'text/plain' else data
         path = '/v1/items/text' if mime == 'text/plain' else '/v1/items/image'
@@ -130,7 +215,7 @@ def execute(mode, fixture_id):
             require(receipt.get('error', {}).get('code') == 'payload_too_large',
                     'Unexpected oversized error code')
             require(client.state() == state, 'Cloud state changed during rejected upload')
-            return {'status': 'PASS', 'scope': 'API fixture only; iPhone NOT RUN',
+            return {'status': 'PASS', 'scope': 'API-side fixture check only',
                     'fixtureId': fixture_id, 'httpStatus': 413, 'cloudStatePreserved': True}
         require(receipt.get('available') is True and receipt.get('replayed') is False,
                 'Submission not available or unexpected replay')
@@ -138,9 +223,10 @@ def execute(mode, fixture_id):
         state = client.state()
         require(state['etag'] == expected['etag'], 'Current item changed after submission')
     item = state['item']
+    metadata_mime = 'text/plain; charset=utf-8' if mime == 'text/plain' else mime
     # Refuse to download an unrecognized current item. Never retrieve private contents.
     require(item and item.get('sha256') == digest and item.get('byteLength') == len(data)
-            and item.get('mimeType') == mime, 'Current metadata does not match pinned fixture')
+            and item.get('mimeType') == metadata_mime, 'Current metadata does not match pinned fixture')
     item_id = item['itemId']
     require(isinstance(item_id, str) and item_id and
             all(c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-' for c in item_id),
@@ -151,17 +237,17 @@ def execute(mode, fixture_id):
     final = client.state()
     require(final['etag'] == state['etag'] and final['item'] and final['item']['itemId'] == item_id,
             'Item replaced or expired during readback')
-    return {'status': 'PASS', 'scope': 'API fixture only; iPhone NOT RUN',
-            'operation': mode, 'fixtureId': fixture_id, 'mimeType': mime,
+    return {'status': 'PASS', 'scope': 'API-side fixture check only',
+            'operation': mode, 'fixtureId': fixture_id, 'mimeType': metadata_mime,
             'byteLength': len(data), 'sha256': digest, 'readbackByteEqual': True}
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('prepare', 'status', 'inject', 'verify'))
+    parser.add_argument('mode', choices=('prepare', 'prepare-visual', 'status', 'inject', 'verify', 'verify-iphone'))
     parser.add_argument('--fixture-id', choices=FIXTURES)
     args = parser.parse_args()
-    if args.mode in ('inject', 'verify') and not args.fixture_id:
+    if args.mode in ('inject', 'verify', 'verify-iphone') and not args.fixture_id:
         parser.error('--fixture-id is required for inject/verify')
     try:
         print(json.dumps(execute(args.mode, args.fixture_id), ensure_ascii=False, indent=2))

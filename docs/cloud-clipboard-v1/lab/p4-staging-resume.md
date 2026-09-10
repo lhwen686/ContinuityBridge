@@ -1,7 +1,10 @@
 # P4：接收 P3 与准备真机测试
 
-2026-09-10。**P3 交接已收到；P4 产品验收仍待 staging 配置，尚未通过。**
-用户已确认允许新建“CB 测试”，并正在准备真实地址和凭据的安全交接。
+> 本文保留收到 P3 时的历史检查。后续真实手机结果、完整动作和交付状态以
+> [P4 实测报告](p4-real-iphone-results.md) 为准；下文“待录入/NOT RUN”是当时快照。
+
+2026-09-10，收到 P3 时：**P3 交接及 API 认证已通过；P4 手机产品验收尚未通过。**
+用户已确认允许新建“CB 测试”，并完成 staging 凭据的加密交接；手机配置待本机录入。
 本文是进度记录，不取代最终动作链、图片粘贴及错误矩阵。
 
 ## 精确交接
@@ -11,7 +14,12 @@
 - 已部署源码：`190c75680206eea8ae54dcbe3fbc017587adf6e8`，未改变候选或重新部署。
 - P3 计划：`P3-STG-20260910-190c7568-R3`，报告状态 PASS。
   原始部署证据仅在 VPS，P4 没有重新执行 VPS/Windows 验收。
-- Git 交接不含真实入口与凭据。手机 HTTPS、capabilities 与身份验证仍为 NOT RUN。
+- Git 交接不含真实入口与凭据。后续本机加密交接已成功：仅读取已部署发布记录与一个
+  staging token，未改变服务、凭据或 sudo 配置。解密值仅用于本机进程，不进入报告。
+- Mac 实际可信 HTTPS 认证及 capabilities 查询 PASS：协议 1，图片上限 20,000,000 字节，
+  文本 UTF-8 上限 1,000,000 字节，JSON 上限 8,000,000 字节，保留 1,800 秒。
+- 真 iPhone Chrome 访问同一 HTTPS `/v1/capabilities`，地址显示安全，正文返回预期的
+  未认证错误。这里只证明手机可信 HTTPS 可达；手机携带 token 的请求尚未验证。
 - P3 报告说明公网 `/healthz` 预期 404，不能把它判成产品接口失败。
   原 `run.py`/`inject.py` 对响应 ETag 头名大小写的处理不适用于当前入口；本次不修改它们。
 
@@ -41,9 +49,11 @@
 
 ## P4 合成 fixture 辅助工具
 
-本阶段新增 [p4_fixture_api.py](p4_fixture_api.py)，仅标准库，位于 P4 lab 范围。
+本阶段新增 [p4_fixture_api.py](p4_fixture_api.py)，核心网络/原有 fixture 使用标准库，位于 P4 lab 范围。
+后续补充的 `prepare-visual` / `verify-iphone` 使用已有 Pillow，不自动安装依赖。
 它不运行既有全套黑盒、不访问系统剪贴板，不是生产功能或 QA mailbox。
-只接收七个固定 fixture ID，不接受任意文件路径、URL 或上传正文；本地文件须匹配固定长度/hash。
+只接收固定合成 fixture ID，不接受任意文件路径、URL 或上传正文；本地文件须匹配固定长度/hash。
+后续新增 `visual-transparent` 和 `visual-jpeg`；`prepare` 生成原七份，`prepare-visual` 生成两份可视图。
 
 从 checkout 根目录运行：
 
@@ -70,7 +80,8 @@ python3 docs/cloud-clipboard-v1/lab/p4_fixture_api.py verify --fixture-id transp
 HTTP 头名在 P4 工具中按不区分大小写比较，完整带引号 ETag 值保持不变。
 报告仅输出 fixture 类型、长度、hash 与核验状态，不输出 itemId、设备信息或服务器正文。
 图片经手机重编码后 hash 变化会使此工具拒绝下载；像素比较须在明确 fixture/QA 租约上下文
-另行验证，不放宽未知正文下载限制。
+另行验证，不放宽未知正文下载限制。后续 `verify-iphone` 只允许实测报告中观察到的固定重编码
+回执哈希/长度，下载前仍检查 metadata；RGBA 不一致返回 FAIL。
 
 ## 当前验证及剩余工作
 
@@ -80,6 +91,8 @@ HTTP 头名在 P4 工具中按不区分大小写比较，完整带引号 ETag �
 | 离线混合大小写 `EtAg`/`cAcHe-CoNtRoL` 响应 | PASS，完整带引号 etag 保持；不是公网测试 |
 | 未识别 fixture metadata | PASS，内容下载调用未发生 |
 | 离线 HTTP 401 | PASS，停止于 HTTP 状态，不返回正文作为内容 |
+| staging API 认证 / 完整 ETag / UUID 提交 | PASS，真实状态头与 JSON etag 一致；原样 If-Match 和 Python uuid4 提交成功；不是 iPhone 动作证据 |
+| API 长文本上传及回读 | PASS，504,028 字节与固定 SHA-256 完全一致；手机长文本 NOT RUN |
 | `sips` 格式/尺寸/alpha 元信息 | PASS，PNG/JPEG 与大 PNG 元信息可读；不算像素一致或 iPhone 解码 |
 | 手机“CB 测试”创建 / 空 CB 配置字典执行 | PASS，仅准备步骤 |
 | 手机长文本上传、UUID、etag 实际发送、PNG/JPEG/近20MB图片传输粘贴 | NOT RUN |
@@ -90,3 +103,10 @@ HTTP 头名在 P4 工具中按不区分大小写比较，完整带引号 ETag �
 收到安全交接后继续同一 P4 分支；先真机 HTTPS，再按
 [动作与顺序](../04_IPHONE_SHORTCUTS.md) 和 [完整矩阵](../05_TEST_AND_AUTOMATION.md)
 执行。API→iPhone 与 Windows 原生 E2E 必须分开报告。
+
+## API 首轮核验修正
+
+首次长文本上传已返回 200，但 P4 辅助脚本把状态 `mimeType` 与裸 `text/plain` 比较，
+因而拒绝继续下载。SHA-A 契约规定元数据应为 `text/plain; charset=utf-8`；
+本次只修正 P4 辅助脚本的期待值，未改变协议或 Relay。随后对同一 fixture 重新读取
+状态、下载并比较完整字节，通过长度和 SHA-256 核验。不能把首轮 oracle 失败记成服务端截断。
