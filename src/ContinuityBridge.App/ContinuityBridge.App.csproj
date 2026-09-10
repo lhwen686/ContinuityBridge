@@ -9,7 +9,6 @@
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ContinuityBridge.Api\ContinuityBridge.Api.csproj" />
     <ProjectReference Include="..\ContinuityBridge.Core\ContinuityBridge.Core.csproj" />
     <ProjectReference Include="..\ContinuityBridge.Windows\ContinuityBridge.Windows.csproj" />
   </ItemGroup>

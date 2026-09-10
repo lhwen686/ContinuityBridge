@@ -1,0 +1,17 @@
+**
+!global.json
+!Directory.Build.props
+!Directory.Build.targets
+!Directory.Packages.props
+!NuGet.Config
+!src/
+!src/ContinuityBridge.Qa.Protocol/
+!src/ContinuityBridge.Qa.Protocol/*.cs
+!src/ContinuityBridge.Qa.Protocol/*.csproj
+!src/ContinuityBridge.Qa.Protocol/packages.lock.json
+!src/ContinuityBridge.Qa.Protocol/Fixtures/
+!src/ContinuityBridge.Qa.Protocol/Fixtures/synthetic.jpg
+!src/ContinuityBridge.Qa.Sidecar/
+!src/ContinuityBridge.Qa.Sidecar/*.cs
+!src/ContinuityBridge.Qa.Sidecar/*.csproj
+!src/ContinuityBridge.Qa.Sidecar/packages.lock.json

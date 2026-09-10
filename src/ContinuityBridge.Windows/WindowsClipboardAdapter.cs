@@ -15,6 +15,10 @@ public sealed class WindowsClipboardAdapter : IClipboardWriter, IAsyncDisposable
 
     private int _started;
     private int _disposeStarted;
+    private Action<Win32Clipboard>? _cloudObserver;
+
+    internal WindowsClipboardAdapter(Action<Win32Clipboard> observer, Action<Exception> errorHandler, bool cloudMode)
+        : this((LocalClipboardCandidate _) => { }, errorHandler) => _cloudObserver = observer;
 
     public WindowsClipboardAdapter(
         Action<LocalClipboardCandidate> candidateHandler,
@@ -134,7 +138,7 @@ public sealed class WindowsClipboardAdapter : IClipboardWriter, IAsyncDisposable
         await stoppedTask.ConfigureAwait(false);
     }
 
-    private async Task<T> InvokeOnClipboardThreadAsync<T>(
+    internal async Task<T> InvokeOnClipboardThreadAsync<T>(
         Func<Win32Clipboard, T> operation,
         CancellationToken cancellationToken)
     {
@@ -205,7 +209,7 @@ public sealed class WindowsClipboardAdapter : IClipboardWriter, IAsyncDisposable
 
         try
         {
-            using var window = new ClipboardMessageWindow(_candidateHandler, ReportError);
+            using var window = new ClipboardMessageWindow(_candidateHandler, ReportError, _cloudObserver);
             window.InitializeClipboardWindow();
             _ready.TrySetResult(window);
             Application.Run();

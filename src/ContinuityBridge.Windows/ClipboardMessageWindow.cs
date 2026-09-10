@@ -17,13 +17,16 @@ internal sealed class ClipboardMessageWindow : Control
     private Win32Clipboard? _clipboard;
     private bool _listenerRegistered;
     private int _eventReadRetries;
+    private readonly Action<Win32Clipboard>? _cloudObserver;
 
     internal ClipboardMessageWindow(
         Action<LocalClipboardCandidate> candidateHandler,
-        Action<Exception> errorHandler)
+        Action<Exception> errorHandler,
+        Action<Win32Clipboard>? cloudObserver = null)
     {
         _candidateHandler = candidateHandler;
         _errorHandler = errorHandler;
+        _cloudObserver = cloudObserver;
         _ownerThreadId = Environment.CurrentManagedThreadId;
         _debounceTimer = new System.Windows.Forms.Timer
         {
@@ -66,6 +69,13 @@ internal sealed class ClipboardMessageWindow : Control
     {
         if (message.Msg == NativeMethods.WmClipboardUpdate)
         {
+            if (_cloudObserver is not null)
+            {
+                try { _cloudObserver(Clipboard); }
+                catch (Exception exception) { _errorHandler(exception); }
+                message.Result = 0;
+                return;
+            }
             _eventReadRetries = 0;
             _debounceTimer.Stop();
             _debounceTimer.Start();

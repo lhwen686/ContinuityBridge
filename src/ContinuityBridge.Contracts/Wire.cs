@@ -9,6 +9,7 @@ public sealed record State(int ProtocolVersion, string ServerEpoch, string Revis
 public sealed record MutationReceipt(string RequestId, string Operation, State Result, State State,
     bool Replayed, bool Available);
 public sealed record ChangeEvent(string Type, string ServerEpoch, string Revision);
+public sealed record DeviceIdentityResponse(string DeviceId);
 public sealed record Limits(int MaxTextUtf8Bytes, int MaxTextJsonBytes, int MaxImageBytes, long MaxDecodedPixels);
 public sealed record IdempotencyCapability(int RetentionSeconds, int MaxEntries, string Scope = "device", bool StoresBodies = false);
 public sealed record StorageCapability(string Mode = "memory", bool SurvivesRestart = false);

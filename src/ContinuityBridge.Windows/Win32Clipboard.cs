@@ -4,7 +4,7 @@ using ContinuityBridge.Core;
 
 namespace ContinuityBridge.Windows;
 
-internal sealed class Win32Clipboard
+internal sealed partial class Win32Clipboard
 {
     internal const string OriginFormatName = "ContinuityBridge.Origin";
     internal const string IncludeInHistoryFormatName = "CanIncludeInClipboardHistory";

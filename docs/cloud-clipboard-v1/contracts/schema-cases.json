@@ -785,5 +785,28 @@
     "schema": "ItemId",
     "valid": false,
     "value": "fixture\n"
+  },
+  {
+    "id": "identity-valid",
+    "schema": "DeviceIdentity",
+    "value": {
+      "deviceId": "fixture-windows"
+    },
+    "valid": true
+  },
+  {
+    "id": "identity-no-client-token",
+    "schema": "DeviceIdentity",
+    "value": {
+      "deviceId": "fixture-windows",
+      "token": "forbidden"
+    },
+    "valid": false
+  },
+  {
+    "id": "identity-missing",
+    "schema": "DeviceIdentity",
+    "value": {},
+    "valid": false
   }
 ]

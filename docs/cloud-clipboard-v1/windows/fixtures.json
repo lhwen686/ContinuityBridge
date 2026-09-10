@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "mimeType": "text/plain; charset=utf-8",
+      "sha256": "c70c05a42d28a6c52a1be2044d8a618061fb1623acee619527ddcb37f0b9a06d",
+      "kind": "text",
+      "byteLength": 37,
+      "fixtureId": "sentinel-v1"
+    },
+    {
+      "mimeType": "text/plain; charset=utf-8",
+      "sha256": "ee28bc0791d1ec11a7223098a203ec2b04516314f977b47bc365820c4bcca039",
+      "kind": "text",
+      "byteLength": 42,
+      "fixtureId": "unicode-v1"
+    },
+    {
+      "mimeType": "text/plain; charset=utf-8",
+      "sha256": "c8005db1c91e3fcb1c77e8ddd236f6fcacdd0bc7213736a3718aa12853625db0",
+      "kind": "text",
+      "byteLength": 372000,
+      "fixtureId": "long-text-v1"
+    },
+    {
+      "mimeType": "image/png",
+      "sha256": "57ce461cf34ca2cf9f6a62f2b3f7fa1bd0e62a2d090f95cc4cfc9af11a8abc7c",
+      "kind": "image",
+      "byteLength": 94,
+      "fixtureId": "alpha-png-v1"
+    },
+    {
+      "mimeType": "image/jpeg",
+      "sha256": "ed8de651b6efa7e3f6a4c034e4f25d7539918037956fa29803aee994905073c5",
+      "kind": "image",
+      "byteLength": 632,
+      "fixtureId": "jpeg-v1"
+    },
+    {
+      "mimeType": "image/png",
+      "sha256": "7fbe8a8809940cde841a7b2949d5a36a4e0a627141dccaf4df203d3d2143daf0",
+      "kind": "image",
+      "byteLength": 20000000,
+      "fixtureId": "png-20000000-v1"
+    },
+    {
+      "mimeType": "image/png",
+      "sha256": "d6c0a5b20f88cc1441fc6edace0da93d5b462cb15182e1c7901f346347908f8b",
+      "kind": "image",
+      "byteLength": 20000001,
+      "fixtureId": "png-20000001-v1"
+    },
+    {
+      "mimeType": "image/png",
+      "sha256": "57ce461cf34ca2cf9f6a62f2b3f7fa1bd0e62a2d090f95cc4cfc9af11a8abc7c",
+      "kind": "image",
+      "byteLength": 94,
+      "fixtureId": "bitmap-v1"
+    },
+    {
+      "mimeType": "application/octet-stream",
+      "sha256": "6a190080290d32015b50aa6c41fe57b244479403b27e1f79faa60e1f15ef2220",
+      "kind": "file",
+      "byteLength": 31,
+      "fixtureId": "file-drop-v1"
+    }
+  ],
+  "generator": "FixtureCatalog.cs; deterministic stored-deflate PNG"
+}

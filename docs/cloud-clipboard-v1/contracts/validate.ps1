@@ -75,13 +75,13 @@ try {
             }
         }
     }
-    if ($operationIds.Count -ne 8 -or $api.security.Count -ne 1 -or
+    if ($operationIds.Count -ne 9 -or $api.security.Count -ne 1 -or
         -not $api.security[0].Contains('deviceBearer') -or
         $api.security[0].deviceBearer.Count -ne 0) { throw 'Unexpected endpoint/security inventory' }
     $defaults = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'default-capabilities.json') -Raw
     $capWrapper = @{ '$schema' = $schema['$schema']; '$defs' = $schema['$defs']; '$ref' = '#/$defs/Capabilities' } | ConvertTo-Json -Depth 100
     if (-not (Test-Json -Json $defaults -Schema $capWrapper)) { throw 'Default capabilities are invalid' }
-    Write-Output "PASS: $passed positive/negative schema cases; all local references; 8 HTTP operations and mutation header inventory; default capabilities."
+    Write-Output "PASS: $passed positive/negative schema cases; all local references; 9 HTTP operations and mutation header inventory; default capabilities."
     Write-Output 'NOT RUN: full OpenAPI meta-schema certification, runtime byte/image/CAS/TTL/auth enforcement, service tests, Windows clipboard, iPhone and deployment.'
     exit 0
 }

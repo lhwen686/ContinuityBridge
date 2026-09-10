@@ -6,4 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ContinuityBridge.Contracts\ContinuityBridge.Contracts.csproj" />
+  </ItemGroup>
 </Project>

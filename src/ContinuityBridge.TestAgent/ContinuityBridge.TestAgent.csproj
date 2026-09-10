@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework><OutputType>WinExe</OutputType><UseWindowsForms>true</UseWindowsForms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>true</SelfContained><PublishSingleFile>true</PublishSingleFile><PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ContinuityBridge.Windows/ContinuityBridge.Windows.csproj" />
+    <ProjectReference Include="../ContinuityBridge.Qa.Protocol/ContinuityBridge.Qa.Protocol.csproj" />
+  </ItemGroup>
+</Project>

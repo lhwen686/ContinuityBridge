@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/product/">
+    <Project Path="src/ContinuityBridge.App/ContinuityBridge.App.csproj" />
+    <Project Path="src/ContinuityBridge.Core/ContinuityBridge.Core.csproj" />
+    <Project Path="src/ContinuityBridge.Windows/ContinuityBridge.Windows.csproj" />
+    <Project Path="src/ContinuityBridge.Contracts/ContinuityBridge.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/qa-only/">
+    <Project Path="src/ContinuityBridge.Qa.Protocol/ContinuityBridge.Qa.Protocol.csproj" />
+    <Project Path="src/ContinuityBridge.Qa.Sidecar/ContinuityBridge.Qa.Sidecar.csproj" />
+    <Project Path="src/ContinuityBridge.TestAgent/ContinuityBridge.TestAgent.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ContinuityBridge.Core.Tests/ContinuityBridge.Core.Tests.csproj" />
+    <Project Path="tests/ContinuityBridge.Windows.Tests/ContinuityBridge.Windows.Tests.csproj" />
+  </Folder>
+</Solution>

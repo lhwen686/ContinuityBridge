@@ -63,6 +63,7 @@ public static class RelayHost
         });
         app.MapGet("/healthz", () => Results.Json(new { status = "ok" }));
         app.MapGet("/v1/capabilities", () => Results.Json(options.Capabilities(), Wire.Json));
+        app.MapGet("/v1/identity", (HttpContext context) => Results.Json(new DeviceIdentityResponse(Identity(context).DeviceId), Wire.Json));
         app.MapGet("/v1/clipboard", (HttpContext context) =>
         {
             var state = store.GetState();

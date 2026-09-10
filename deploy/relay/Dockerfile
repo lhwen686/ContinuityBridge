@@ -2,14 +2,18 @@
 ARG SDK_IMAGE=mcr.microsoft.com/dotnet/sdk:10.0.400
 ARG RUNTIME_IMAGE=mcr.microsoft.com/dotnet/aspnet:10.0
 FROM ${SDK_IMAGE} AS build
+ARG CANDIDATE_SHA
 WORKDIR /src
-COPY global.json Directory.Build.props Directory.Packages.props NuGet.Config ./
+COPY global.json Directory.Build.props Directory.Build.targets Directory.Packages.props NuGet.Config ./
 COPY src/ContinuityBridge.Contracts/ src/ContinuityBridge.Contracts/
 COPY src/ContinuityBridge.Relay/ src/ContinuityBridge.Relay/
 RUN dotnet restore src/ContinuityBridge.Relay/ContinuityBridge.Relay.csproj --locked-mode
-RUN dotnet publish src/ContinuityBridge.Relay/ContinuityBridge.Relay.csproj -c Release --no-restore -o /out -p:UseAppHost=false
+RUN test "${#CANDIDATE_SHA}" -eq 40
+RUN dotnet publish src/ContinuityBridge.Relay/ContinuityBridge.Relay.csproj -c Release --no-restore -o /out -p:UseAppHost=false -p:SourceRevisionId=$CANDIDATE_SHA
 
 FROM ${RUNTIME_IMAGE} AS final
+ARG CANDIDATE_SHA
+LABEL org.opencontainers.image.revision=$CANDIDATE_SHA
 WORKDIR /app
 COPY --from=build /out/ ./
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080

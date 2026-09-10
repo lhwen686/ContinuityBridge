@@ -17,6 +17,7 @@ v1 只支持 `cryptoMode=none`。图片是原始二进制请求体，不使用 B
 | 方法/路径 | 输入与结果 |
 |---|---|
 | `GET /v1/capabilities` | 版本、种类、mime、limits、retentionSeconds、cryptoModes、通知协议、运行存储语义 |
+| `GET /v1/identity` | P5 兼容新增：认证 token 推导的 `{ "deviceId": "…" }`，用于 Windows 跳过本设备旧云项；无 token 回显 |
 | `GET /v1/clipboard` | 当前元数据；为空仍返回 200 JSON，`item:null` 和当前 etag |
 | `POST /v1/items/text` | JSON `{ "text": "完整文本" }`；返回提交元数据 |
 | `POST /v1/items/image` | `image/png` 或 `image/jpeg` 原始 File/二进制正文；返回提交元数据 |

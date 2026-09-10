@@ -519,6 +519,18 @@
         "status"
       ],
       "additionalProperties": false
+    },
+    "DeviceIdentity": {
+      "type": "object",
+      "properties": {
+        "deviceId": {
+          "$ref": "#/$defs/ItemId"
+        }
+      },
+      "required": [
+        "deviceId"
+      ],
+      "additionalProperties": false
     }
   }
 }

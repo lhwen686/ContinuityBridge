@@ -1,0 +1,30 @@
+# Separate compose project, secret mount and HTTPS route; P3 plan approval required.
+name: cb-staging-qa
+services:
+  qa:
+    image: "${QA_IMAGE_ID:?Set reviewed immutable QA image ID}"
+    pull_policy: never
+    user: "1654:1654"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    ports: ["127.0.0.1:43118:8080/tcp"]
+    volumes:
+      - type: bind
+        source: "${QA_LEASE_FILE:?Set host-local short-lived hashed lease file}"
+        target: /run/secrets/lease.json
+        read_only: true
+        bind: {create_host_path: false}
+    environment:
+      DOTNET_EnableDiagnostics: "0"
+      DOTNET_DbgEnableMiniDump: "0"
+      COMPlus_DbgEnableMiniDump: "0"
+    cgroup_parent: cbstaging.slice
+    mem_limit: 128m
+    memswap_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    ulimits: {core: {soft: 0, hard: 0}}
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777"]
+    restart: "no"
+    logging: {driver: "none"}

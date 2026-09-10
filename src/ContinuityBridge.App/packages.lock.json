@@ -8,14 +8,14 @@
         "resolved": "10.0.11",
         "contentHash": "IBf7lbovvjGWVWXZX5cJ/cO0WXbId0Zq4BuSeT94mGZuOAP66oMeH9PTBZ9Jpp3Jb6jtK0qm/NyUbPRo1gC/wQ=="
       },
-      "continuitybridge.api": {
-        "type": "Project",
-        "dependencies": {
-          "ContinuityBridge.Core": "[1.0.0, )"
-        }
+      "continuitybridge.contracts": {
+        "type": "Project"
       },
       "continuitybridge.core": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "ContinuityBridge.Contracts": "[1.0.0, )"
+        }
       },
       "continuitybridge.windows": {
         "type": "Project",
