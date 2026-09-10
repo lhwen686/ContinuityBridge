@@ -1,0 +1,49 @@
+# Review template only; never apply directly to an existing deployment.
+name: cb-staging
+services:
+  relay:
+    image: "${RELAY_IMAGE_ID:?Set verified immutable local image ID from this candidate build}"
+    pull_policy: never
+    platform: linux/amd64
+    user: "1654:1654"
+    cgroup_parent: cbstaging.slice
+    ports:
+      - "127.0.0.1:43117:8080/tcp"
+    env_file: [./relay.env]
+    environment:
+      DOTNET_DbgEnableMiniDump: "0"
+      COMPlus_DbgEnableMiniDump: "0"
+      DOTNET_EnableDiagnostics: "0"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=67108864,mode=1777
+    volumes:
+      - type: bind
+        source: "${STAGING_DEVICE_DIRECTORY:?Set the reviewed local registry directory}"
+        target: /run/secrets
+        read_only: true
+        bind:
+          create_host_path: false
+    mem_limit: 768m
+    memswap_limit: 768m
+    cpus: 1.0
+    pids_limit: 128
+    ulimits:
+      core: {soft: 0, hard: 0}
+    restart: unless-stopped
+    stop_grace_period: 40s
+    logging:
+      driver: local
+      options:
+        max-size: "5m"
+        max-file: "2"
+    networks: [relay]
+networks:
+  relay:
+    driver: bridge
+    enable_ipv6: false
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+      com.docker.network.bridge.gateway_mode_ipv4: "nat"

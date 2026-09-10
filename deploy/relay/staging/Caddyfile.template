@@ -1,0 +1,49 @@
+# Reserved example address/domain. Replace locally under a concrete approved plan.
+{
+    admin off
+    auto_https disable_redirects
+    default_bind 192.0.2.10
+    storage file_system /var/lib/caddy/cb-staging
+    grace_period 40s
+    log default {
+        level INFO
+        exclude http.log.access http.log.error
+    }
+    servers {
+        protocols h1 h2
+        timeouts {
+            read_header 10s
+            read_body 35s
+            idle 60s
+        }
+    }
+}
+
+http://staging.example.invalid {
+    redir https://staging.example.invalid{uri} 308
+}
+
+https://staging.example.invalid {
+    tls {
+        issuer acme {
+            dir https://acme-v02.api.letsencrypt.org/directory
+            disable_tlsalpn_challenge
+        }
+    }
+    header {
+        Cache-Control "no-store"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+    handle /v1/* {
+        reverse_proxy 127.0.0.1:43117 {
+            transport http {
+                dial_timeout 3s
+                response_header_timeout 35s
+            }
+        }
+    }
+    handle {
+        respond 404
+    }
+}
