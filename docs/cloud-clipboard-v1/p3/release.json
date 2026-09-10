@@ -1,0 +1,70 @@
+{
+  "planId": "P3-STG-20260910-190c7568-R3",
+  "sourceSha": "190c75680206eea8ae54dcbe3fbc017587adf6e8",
+  "gitDirty": false,
+  "platform": "linux/amd64",
+  "protocolVersion": 1,
+  "configSchema": {
+    "definition": "src/ContinuityBridge.Relay/RelayOptions.cs",
+    "sourceSha": "190c75680206eea8ae54dcbe3fbc017587adf6e8",
+    "sha256": "d4958d46344227673afd17bae31912f82dc7364fe6a23e85c0b7e1588728d4ac",
+    "note": "Candidate does not declare a separate numeric config schema; pinned definition identifies exact accepted schema"
+  },
+  "imageId": "sha256:16fdd19286454b0d52bbada0f98a8da260bcdc7f0b6152781a2eff873c82628e",
+  "imageDigest": "sha256:16fdd19286454b0d52bbada0f98a8da260bcdc7f0b6152781a2eff873c82628e",
+  "digestKind": "local OCI image index; not pushed to registry",
+  "amd64ManifestDigest": "sha256:b245b9d93da7b5c2571f7ea1d1aa219b7e5c835a065e0e5a86a17dd5094adff6",
+  "imageConfigDigest": "sha256:723521f5cba908cbc3e47b107fdfefac48f17cff5bff7b59390f510352d6215b",
+  "packages": [
+    {
+      "name": "containerd.io",
+      "version": "2.3.5-1~ubuntu.24.04~noble",
+      "architecture": "amd64"
+    },
+    {
+      "name": "docker-buildx-plugin",
+      "version": "0.37.0-1~ubuntu.24.04~noble",
+      "architecture": "amd64"
+    },
+    {
+      "name": "docker-ce",
+      "version": "5:29.8.0-1~ubuntu.24.04~noble",
+      "architecture": "amd64"
+    },
+    {
+      "name": "docker-ce-cli",
+      "version": "5:29.8.0-1~ubuntu.24.04~noble",
+      "architecture": "amd64"
+    },
+    {
+      "name": "docker-compose-plugin",
+      "version": "5.5.1-1~ubuntu.24.04~noble",
+      "architecture": "amd64"
+    },
+    {
+      "name": "caddy",
+      "version": "2.11.4",
+      "architecture": "amd64"
+    }
+  ],
+  "deploymentStatus": "RUNNING",
+  "p3Status": "PASS",
+  "ttlStatus": "PASS",
+  "configHashes": {
+    "compose.yaml": "2abefd43cc8660a74d2a440f4946eed75331bd8522c8aadf1927d85d0ac422f8",
+    "relay.env": "2778b38a983145d10ba0ce3fce55420fcc71c5ee500a7b50667067fb104a4af7",
+    "image.env": "3594822c852a8cc1d9842e7b8cc60bb7577cbde7a1e2d464022b6ba291682f3f"
+  },
+  "fixtureSuite": {
+    "path": "tests/relay-blackbox/run.py",
+    "sha256": "cde23af5b719d532c5e567e1c97d0b7f7df83ad7cf0d7bbfac2710496e1167b3",
+    "sourceSha": "190c75680206eea8ae54dcbe3fbc017587adf6e8"
+  },
+  "previousRelease": null,
+  "report": "../13_P3_STAGING_HANDOFF.md",
+  "acceptance": "acceptance.json",
+  "reportCommitIsNotDeployedSource": true,
+  "rollbackTarget": "Withdraw first staging release; no previously approved running image. Do not start defective R2 configuration.",
+  "privateDeploymentDetails": "Resolve on the VPS through its local P3 handoff; never infer or publish endpoint or credentials.",
+  "productionAuthorized": false
+}

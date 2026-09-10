@@ -1,0 +1,151 @@
+{
+  "planId": "P3-STG-20260910-190c7568-R3",
+  "sourceSha": "190c75680206eea8ae54dcbe3fbc017587adf6e8",
+  "status": "PASS",
+  "completedUtc": "2026-09-10T05:48:54.973446+00:00",
+  "checks": {
+    "linuxDotnet": {
+      "status": "PASS",
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "origin": "R2 unchanged candidate; not rerun for metadata publication"
+    },
+    "loopbackWire": {
+      "status": "PASS",
+      "groups": 9
+    },
+    "vpsHttpsWssWire": {
+      "status": "PASS",
+      "groups": 9,
+      "scope": "All API/WSS through trusted TLS; health200 local, public health404 checked separately; HTTP header comparison case-insensitive"
+    },
+    "realTtl": {
+      "status": "PASS",
+      "elapsedSeconds": 1802.095,
+      "readsRenewExpiry": false,
+      "expiredContentStatus": 410
+    },
+    "runtimeIsolationAndRollback": {
+      "status": "PASS",
+      "evidence": [
+        "P3-E01",
+        "P3-E02",
+        "P3-E04"
+      ]
+    },
+    "windowsExternal": {
+      "status": "PASS",
+      "source": "User-provided handoff in current task",
+      "cases": [
+        "HTTPS positive/negative authorization",
+        "WSS notification and content verification",
+        "IPv4 TCP43117 isolation"
+      ],
+      "rawReportPath": null,
+      "note": "Accepted as supplied evidence; not independently rerun or represented as newly inspected Windows raw artifacts"
+    },
+    "ipv6Backend": {
+      "status": "PASS",
+      "classification": "timeout/filtered",
+      "target": "REDACTED_ORIGIN_IPV6",
+      "port": 43117,
+      "windowStartUtc": "2026-09-10T05:44:01.931Z",
+      "windowEndUtc": "2026-09-10T05:45:11.669Z",
+      "probeCount": 2,
+      "reuse": "Previous measurement ID; same order and all exposed metadata equal; no offline results",
+      "controlBeforePerProbe": {
+        "port": 22,
+        "attempts": 3,
+        "successes": 3
+      },
+      "backendPerProbe": {
+        "port": 43117,
+        "attempts": 3,
+        "successes": 0
+      },
+      "controlAfterPerProbe": {
+        "port": 22,
+        "attempts": 3,
+        "successes": 3
+      },
+      "scope": "Only measured external paths and time window; does not identify the dropping device",
+      "sourceAddressOrUniqueProbeIdInvented": false,
+      "evidence": [
+        "P3-E05",
+        "P3-E06",
+        "P3-E07",
+        "P3-E08"
+      ]
+    },
+    "ipv6UserEntry": {
+      "status": "N/A",
+      "scope": "Current R3 deployment only",
+      "basis": "No staging AAAA or IPv6 proxy-edge entry observed; Caddy IPv4-only80/443; no contractual dual-stack requirement found in prior applicability review"
+    },
+    "containerPublicIpv6DirectRouting": {
+      "status": "N/A",
+      "scope": "Current R3 container network",
+      "basis": "No container publicIPv6, IPv6 gateway or external IPv6 route"
+    }
+  },
+  "evidenceIndex": [
+    {
+      "id": "P3-E01",
+      "sha256": "9853ab014440f6a62271ea51068ea96ab6b3bdc1705dbf72b4bcad33d901eab4",
+      "description": "R3 parent swap limit survives reload/restart/recreate",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E02",
+      "sha256": "7f64dde81de501f82c4a857df05532624346943d13120d80e373b8174451a19c",
+      "description": "Revocation, epoch, configuration restore and R3 rollback/recovery",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E03",
+      "sha256": "07b8ba905d5e004b23c1d09017f9555eb8c2a94f7f6088cfaccb9a68ac68dd6b",
+      "description": "Actual 1802.095-second expiry and no read renewal",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E04",
+      "sha256": "2b4109877abb082bc5561c7cddf28ad48466ffe47f6f19a98927ea7e8a682bc3",
+      "description": "Resources, logs, credential permissions and preserved services",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E05",
+      "sha256": "3ecfae77cb5db46ea8a44099efa0803970fde9ae7ce619169a05a8e6ab5d7476",
+      "description": "Globalping IPv6 TCP control-before structured result, request and raw output retained locally",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E06",
+      "sha256": "0e1d4da044024a4553b6927327805d6d588a422902a3e9c327db514e1ce83e7f",
+      "description": "Globalping IPv6 TCP backend structured result, request and raw output retained locally",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E07",
+      "sha256": "b5671809c19c27f926993ad9a4474f79bd1491a149c902d826693d635847167b",
+      "description": "Globalping IPv6 TCP control-after structured result, request and raw output retained locally",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E08",
+      "sha256": "9433c102af1fa05f3003f9fb7a0f90e1aa3600c773e37b3b49ff17c4d390e550",
+      "description": "Same source/image/container/configuration and IPv6 rules at closure",
+      "location": "VPS_LOCAL_ONLY"
+    },
+    {
+      "id": "P3-E09",
+      "sha256": "0d733453f97b66555e9ea764fb7229cc4d852f0fbe29843cd264ff4022b34c92",
+      "description": "Final local acceptance with full measurement references",
+      "location": "VPS_LOCAL_ONLY"
+    }
+  ],
+  "publicMeasurementLinksOmitted": "Their result documents reveal the private origin address; resolve full IDs through VPS-local evidence.",
+  "blockers": [],
+  "nextStages": "Not executed by this P3 task"
+}
