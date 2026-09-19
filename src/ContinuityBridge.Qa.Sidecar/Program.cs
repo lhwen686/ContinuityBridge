@@ -14,7 +14,7 @@ if (args.Length == 2 && args[0] == "--provision")
     string run = Guid.NewGuid().ToString(); var expires = DateTimeOffset.UtcNow.AddMinutes(45);
     Write("lease.json", new QaLease(run, CandidateBuild.Sha, expires, Hash(controller), Hash(runner)));
     Write("controller.json", new { runId = run, candidateSha = CandidateBuild.Sha, expiresAt = expires, token = controller });
-    Write("runner.json", new { runId = run, candidateSha = CandidateBuild.Sha, expiresAt = expires, token = runner });
+    Write("runner.json", new { role = "runner", runId = run, candidateSha = CandidateBuild.Sha, expiresAt = expires, token = runner });
     void Write<T>(string name, T value)
     {
         if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException();

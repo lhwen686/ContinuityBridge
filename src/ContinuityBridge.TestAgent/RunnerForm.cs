@@ -16,6 +16,9 @@ internal sealed class RunnerForm : Form
     private readonly CheckBox consent = new() { AutoSize = true, Text = "已保管重要内容，授权本次测试窗口；发现外部复制立即停止" };
     private readonly Button start = new() { Text = "开始测试", AutoSize = true };
     private readonly Button stop = new() { Text = "立即停止", AutoSize = true, Enabled = false };
+    private readonly Button import = new() { Text = "导入 staging 配置（不开始）", AutoSize = true };
+    private readonly Button clearImport = new() { Text = "清除导入", AutoSize = true };
+    private StagingCredentials? imported;
     private CancellationTokenSource? lifetime;
     private bool running;
     private bool closeRequested;
@@ -31,12 +34,16 @@ internal sealed class RunnerForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         var layout = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(22), FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true };
         layout.Controls.Add(new Label { AutoSize = true, Text = "候选 SHA：" + CandidateBuild.Sha });
+        layout.Controls.Add(import); layout.Controls.Add(clearImport);
         layout.Controls.Add(origin); layout.Controls.Add(runId); layout.Controls.Add(token);
         layout.Controls.Add(stagingSync); layout.Controls.Add(relayOrigin); layout.Controls.Add(relayToken);
         layout.Controls.Add(new Label { AutoSize = true, MaximumSize = new Size(700, 0), Text = "先验证 QA 身份/角色/租约，再备份支持格式到本进程内存，最后写合成 fixture。未知格式、超限、竞争均停止且不覆盖。请先手动退出日常产品 App。清理先停止全部测试任务，仅无外部复制时恢复；强杀/断电无法恢复。" });
         layout.Controls.Add(consent); layout.Controls.Add(start); layout.Controls.Add(stop); layout.Controls.Add(status); Controls.Add(layout);
         start.Click += async (_, _) => await StartRunAsync();
         stop.Click += (_, _) => lifetime?.Cancel();
+        token.ShortcutsEnabled = false; relayToken.ShortcutsEnabled = false;
+        import.Click += (_, _) => SelectStagingFiles();
+        clearImport.Click += (_, _) => ClearImportedConfiguration();
         FormClosing += (_, e) =>
         {
             if (running)
@@ -44,9 +51,53 @@ internal sealed class RunnerForm : Form
         };
     }
 
+    private void SelectStagingFiles()
+    {
+        if (running || poisoned) return;
+        using var dialog = new OpenFileDialog { Filter = "JSON 文件 (*.json)|*.json", Multiselect = false,
+            CheckFileExists = true, RestoreDirectory = true, AddToRecent = false, Title = "选择受限目录中的 runner.json" };
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        string runnerPath = dialog.FileName;
+        dialog.FileName = ""; dialog.Title = "选择受限目录中的 windows-relay.json";
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        ImportStagingFiles(runnerPath, dialog.FileName);
+    }
+
+    internal bool ImportStagingFiles(string runnerPath, string relayPath)
+    {
+        if (running || poisoned) return false;
+        ClearImportedConfiguration();
+        if (!StagingImport.TryLoad(runnerPath, relayPath, CandidateBuild.Sha, DateTimeOffset.UtcNow, out var value))
+        {
+            status.Text = "导入被拒绝：请核对本机文件权限、角色、候选、有效期及 staging 配置格式；未联网或接管。";
+            return false;
+        }
+        imported = value!;
+        origin.Text = imported.QaOrigin; runId.Text = imported.RunId; token.Text = imported.RunnerToken;
+        relayOrigin.Text = imported.RelayOrigin; relayToken.Text = imported.DeviceToken;
+        foreach (var box in new[] { origin, runId, token, relayOrigin, relayToken }) box.ReadOnly = true;
+        status.Text = "已导入本次 staging 配置（仅内存）；未联网或接管。请人工确认隔离同步及测试窗口，再开始。";
+        return true;
+    }
+
+    private void ClearImportedConfiguration()
+    {
+        if (running || poisoned) return;
+        imported = null;
+        foreach (var box in new[] { origin, runId, token, relayOrigin, relayToken }) { box.Clear(); box.ReadOnly = false; }
+        consent.Checked = false; stagingSync.Checked = false;
+        status.Text = "未启用；没有读取剪贴板或连接 QA。";
+    }
+
     private async Task StartRunAsync()
     {
         if (running || poisoned || !consent.Checked) return;
+        if (imported is not null && !imported.IsCurrent(CandidateBuild.Sha, DateTimeOffset.UtcNow))
+        {
+            ClearImportedConfiguration();
+            status.Text = "导入的候选或租约已失效；请重新安全导入。未联网或接管。";
+            return;
+        }
         Mutex? productIsolation = null;
         bool ownsIsolation = false;
         RunnerSession? session = null;
@@ -70,7 +121,7 @@ internal sealed class RunnerForm : Form
             productIsolation = new Mutex(true, @"Local\ContinuityBridge.Product.v1", out ownsIsolation);
             if (!ownsIsolation)
             { status.Text = "未接管：日常产品 App 仍在运行。请手动退出后重试；没有读取剪贴板或连接 QA。"; return; }
-            foreach (Control control in new Control[] { start, origin, runId, token, stagingSync, relayOrigin, relayToken, consent }) control.Enabled = false;
+            foreach (Control control in new Control[] { start, origin, runId, token, stagingSync, relayOrigin, relayToken, consent, import, clearImport }) control.Enabled = false;
             stop.Enabled = true; token.Clear(); relayToken.Clear();
             // stop can be raised on the clipboard STA or product worker; CTS is thread safe.
             var desktop = new FixtureDesktop(() => cancellation.Cancel());
@@ -105,7 +156,10 @@ internal sealed class RunnerForm : Form
                 if (ownsIsolation) productIsolation?.ReleaseMutex();
                 productIsolation?.Dispose();
             }
-            foreach (Control control in new Control[] { start, origin, runId, token, stagingSync, relayOrigin, relayToken, consent }) control.Enabled = true;
+            foreach (Control control in new Control[] { start, origin, runId, token, stagingSync, relayOrigin, relayToken, consent, import, clearImport }) control.Enabled = true;
+            imported = null; token.Clear(); relayToken.Clear();
+            foreach (var box in new[] { origin, runId, token, relayOrigin, relayToken }) box.ReadOnly = false;
+            import.Enabled = clearImport.Enabled = !poisoned;
             start.Enabled = !poisoned; stop.Enabled = false; consent.Checked = false;
             if (closeRequested) Close();
         }

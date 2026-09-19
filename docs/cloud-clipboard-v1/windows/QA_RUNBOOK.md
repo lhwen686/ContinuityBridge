@@ -14,6 +14,8 @@ P6 前置：Windows、Mac 和 staging 均使用交付的完整 SHA-B；P3 已按
 
 ## Windows 启动
 
+W1 新增的安全文件导入入口与 `runner.json` / `windows-relay.json` 交付格式见 [STAGING_IMPORT](STAGING_IMPORT.md)。只装载到内存，不自动勾选同步/授权或开始；旧包没有此入口，须在 W2 集成后使用新候选包。
+
 1. 当前登录桌面双击 `ContinuityBridge.TestAgent.exe`。核对窗口的完整候选 SHA。
 2. 本机填写 QA HTTPS origin、runId 和 **runner token**；token 遮蔽显示、仅留内存，不截图配置。
 3. **先自行保管重要剪贴板内容并确认测试窗口，手动退出日常产品 App**。TestAgent 使用产品的会话单实例互斥：产品仍开着（即使暂停）就拒绝启用；测试接管和清理期间产品也不能启动。不会代你关闭任何程序。
