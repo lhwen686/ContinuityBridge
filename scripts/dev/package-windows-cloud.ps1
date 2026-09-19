@@ -36,6 +36,7 @@ try {
             Copy-Item -LiteralPath docs/cloud-clipboard-v1/windows/USER_GUIDE.md -Destination (Join-Path $package '使用说明.md')
         } else {
             Copy-Item -LiteralPath docs/cloud-clipboard-v1/windows/QA_RUNBOOK.md -Destination (Join-Path $package '测试使用说明.md')
+            Copy-Item -LiteralPath docs/cloud-clipboard-v1/windows/STAGING_IMPORT.md -Destination (Join-Path $package 'STAGING_IMPORT.md')
             Copy-Item -LiteralPath docs/cloud-clipboard-v1/windows/fixtures.json -Destination (Join-Path $package 'fixtures.json')
         }
         $signature = Get-AuthenticodeSignature -LiteralPath (Join-Path $package $entry.Exe)
