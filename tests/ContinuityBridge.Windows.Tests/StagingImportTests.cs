@@ -55,7 +55,8 @@ public sealed class StagingImportTests
         Assert.IsFalse(mixed.Parse(out _));
         var malformed = new Pair(); malformed.Runner["expiresAt"] = "not-a-date";
         Assert.IsFalse(malformed.Parse(out _));
-        var noZone = new Pair(); noZone.Runner["expiresAt"] = noZone.Relay["expiresAt"] = noZone.Now.AddMinutes(20).ToString("yyyy-MM-ddTHH:mm:ss");
+        var noZone = new Pair(); noZone.Runner["expiresAt"] = noZone.Relay["expiresAt"] =
+            noZone.Now.AddMinutes(20).ToString("yyyy-MM-ddTHH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
         Assert.IsFalse(noZone.Parse(out _));
     }
 
