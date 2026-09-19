@@ -12,7 +12,7 @@
 | 手机语言 | 用户确认英文；本轮 UI 读取受阻，未用 Mac 中文界面代替手机类型实测 |
 | 已有工具 | 配置为 Mobile MCP 1.0.3 → mobilecli 1.0.9 的既有 loopback 修补版；修补二进制与原登记值匹配；DeviceKit 源码 tag 为 0.0.26 |
 | 监听边界 | 本轮观察到相关转发只监听 127.0.0.1；这不等于设备健康或 UI 可用 |
-| 真机代理 | 读取前台应用超时；用户解锁后再次检查仍超时。当前只读进程查询没有找到 DeviceKit 进程 |
+| 真机代理 | 读取前台应用超时；用户解锁后再次检查仍超时。当前只读进程查询没有找到 DeviceKit 进程；随后一次 Apple 原生 Runner 启动诊断被系统安全检查拒绝 |
 | UI tree / 安全页面截图 / 安全点击 | BLOCKED，不能以设备枚举或本地模板导出代替 |
 | 安全交付探针 | 复用已完成且经 VPS 确认的唯一一次 SFTP 回执；不重新连接 |
 
@@ -25,7 +25,9 @@
 3. 既有 mobilecli 的 `StartAgent` 枚举手机已安装应用，按 Runner bundle ID 后缀查找，经 testmanagerd 启动该安装实例；不会从 Mac 当前 Xcode 的构建目录自动重新构建或重新安装。工具错误文本中的 WebDriverAgent 名称不表示已切换到独立 Appium WDA。
 4. 手机可枚举到对应主 App 和 Runner，版本均为 1.0/build 1；`agent status` 也找到 Runner。bundle ID 和版本相同不足以证明安装包来源或包内描述文件内容。本轮未取得能将手机安装字节与某份 Mac 构建逐一对应的证据。
 
-所以当前结论是 **代理启动失败，根因未定；不能笼统判定当前签名已过期**。本轮没有重新签名、构建安装或修改签名设置。实际路径和完整元数据仅在本机受限回执中保存。
+5. 对手机已安装 Runner 做一次 `devicectl device process launch` 诊断，Apple 返回 CoreDeviceError 10002、FBSOpenApplicationErrorDomain 3 / Security，原因文本涵盖 invalid code signature、inadequate entitlements 或未被用户显式信任。这确认当前安装实例被系统安全检查拒绝，但没有区分这三种原因，更没有单独证明描述文件过期。
+
+所以当前结论是 **手机已安装 Runner 被系统安全检查拒绝，具体签名/entitlements/信任原因待区分；不能笼统判定当前签名已过期**。本轮没有重新签名、构建安装或修改签名设置。实际路径和完整元数据仅在本机受限回执中保存。
 
 ## M2 模板与安装证据
 
